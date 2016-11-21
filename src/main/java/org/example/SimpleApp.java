@@ -21,9 +21,6 @@ public class SimpleApp {
 		ArrayList<Tuple2<Integer,Integer>> dummyData = generateDummyData(10);
 		System.out.println(dummyData);
 
-		int[] fields = new int[]{4, 4, 3};
-
-
 		TypeInformation<?>[] fieldTypes = new TypeInformation[2];
 		fieldTypes[0] = TypeInformation.of(Integer.class);
 		fieldTypes[1] = TypeInformation.of(Integer.class);
