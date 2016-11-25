@@ -12,6 +12,14 @@ import org.apache.flink.core.memory.MemorySegment;
 import org.apache.flink.core.memory.MemorySegmentFactory;
 import org.apache.flink.runtime.operators.sort.FixedLengthRecordSorter;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
+import org.apache.flink.runtime.operators.sort.QuickSort;
+import org.apache.flink.util.MutableObjectIterator;
+import org.example.utils.IntPair;
+import org.example.utils.IntPairComparator;
+import org.example.utils.IntPairSerializer;
+import org.example.utils.RandomIntPairGenerator;
+import scala.Int;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,63 +27,39 @@ import java.util.List;
 public class SimpleApp {
 	private static final int pageSize = 32*1024;
 	private static final int numSegments = 34;
+	private static final int NUM_RECORDS = 10;
+	private static final int SEED	     = 11;
 
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 
-		System.out.println("HI!");
-
-		ArrayList<Tuple2<Integer,Integer>> dummyData = generateDummyData(10);
-		System.out.println(dummyData);
-
-
-		System.out.print("Creating sorter");
+		RandomIntPairGenerator generator = new RandomIntPairGenerator(SEED);
 
 		InMemorySorter sorter = createSorter();
 
-
-
-
-	}
-
-	private	static ArrayList<Tuple2<Integer,Integer>> generateDummyData(int size ){
-		ArrayList<Tuple2<Integer,Integer>> data = new ArrayList<Tuple2<Integer,Integer>>();
-
-		while(size > 0 ){
-			Tuple2 t = new Tuple2(1,2);
-			data.add(t);
-			size--;
+		int num = -1;
+		IntPair record = new IntPair();
+		do {
+			generator.next(record);
+			num++;
 		}
+		while (sorter.write(record) && num < NUM_RECORDS);
 
-		return data;
+		QuickSort qs = new QuickSort();
+		qs.sort(sorter);
+
+		checkCorrectness(sorter.getIterator());
 	}
 
 	public static InMemorySorter createSorter() {
-		TypeSerializer[] typeSerializer = new TypeSerializer[] {
-				IntSerializer.INSTANCE,
-				IntSerializer.INSTANCE
-		};
-
-		TypeSerializer<Tuple2<Integer,Integer>> tupleSerializer = new TupleSerializer<Tuple2<Integer, Integer>>(
-				(Class<Tuple2<Integer, Integer>>) (Class<?>) Tuple2.class,
-				typeSerializer
-		);
 
 
-		IntComparator intComparator = new IntComparator(true);
-
-		TupleComparator<Tuple2<Integer,Integer>> comparator = new TupleComparator<Tuple2<Integer, Integer>>(
-				new int[]{0},
-				new TypeComparator[]{
-					intComparator
-				},
-				typeSerializer
-		);
-
+		IntPairSerializer serializer = new IntPairSerializer();
+		IntPairComparator comparator = new IntPairComparator();
 		MemorySegment memory = MemorySegmentFactory.allocateUnpooledSegment(pageSize);
 
-		FixedLengthRecordSorter<Tuple2<Integer,Integer>> sorter = new FixedLengthRecordSorter<Tuple2<Integer, Integer>>(
-			tupleSerializer,
+		FixedLengthRecordSorter<IntPair> sorter = new FixedLengthRecordSorter<IntPair>(
+			serializer,
 			comparator,
 			getMemory( numSegments, pageSize )
 		);
@@ -90,6 +74,29 @@ public class SimpleApp {
 			list.add(MemorySegmentFactory.allocateUnpooledSegment(segmentSize));
 		}
 		return list;
+	}
+
+	private static void checkCorrectness(MutableObjectIterator<IntPair> iter) throws Exception{
+		IntPair readTarget = new IntPair();
+
+		int current;
+		int last;
+
+		iter.next(readTarget);
+		last = readTarget.getKey();
+
+		while ((readTarget = iter.next(readTarget)) != null) {
+			current = readTarget.getKey();
+
+			final int cmp = last - current;
+			if (cmp > 0) {
+				throw new Exception("Data was not sorted properly");
+			}
+			last = current;
+		}
+
+		System.out.println("checkCorrectness: passed");
+
 	}
 
 }
