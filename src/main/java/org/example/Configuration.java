@@ -9,7 +9,7 @@ public class Configuration {
 	public static final int numSegments = 34;
 	public static final int SEED	     = 11;
 
-	public static final int BENCHMARK_RECORD_SIZE = 10000;
-	public static final int BENCHMARK_WARMUP= 2;
-	public static final int BENCHMARK_ITERATION = 5;
+	public static final int BENCHMARK_RECORD_SIZE = 50000;
+	public static final int BENCHMARK_WARMUP= 3;
+	public static final int BENCHMARK_ITERATION = 10;
 }
