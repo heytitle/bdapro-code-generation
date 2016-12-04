@@ -15,21 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SimpleApp {
-	private static final int noBlocks    = 32; // 2^(a-10)*(Indexsize) in this case indexsize = 4+8
-	private static final int pageSize    = noBlocks*1024; // this makes indexEntriesPerSegment be exponential of 2 ( 2^11 )
-	private static final int numSegments = 34;
-	private static final int NUM_RECORDS = 10;
-	private static final int SEED	     = 11;
-
-	// TODO:
-	// create sorter
-	// @preparephase
-	// 	 preparedata
-	// do sort
 
 	public static void main(String[] args) throws Exception {
-
-		RandomTuple2LongInt generator = new RandomTuple2LongInt(SEED);
+		RandomTuple2LongInt generator = new RandomTuple2LongInt(Configuration.SEED);
 
 //		InMemorySorter sorter = SorterFactory.getSorter("org.apache.flink.runtime.operators.sort.NormalizedKeySorter");
 		InMemorySorter sorter = SorterFactory.getSorter("org.example.MySorter");
@@ -40,21 +28,12 @@ public class SimpleApp {
 			generator.next(record);
 			num++;
 		}
-		while (sorter.write(record) && num < NUM_RECORDS);
+		while (sorter.write(record) && num < Configuration.NUM_RECORDS);
 
 		QuickSort qs = new QuickSort();
 		qs.sort(sorter);
 
 		checkCorrectness(sorter.getIterator());
-	}
-
-
-	private static List<MemorySegment> getMemory(int numSegments, int segmentSize) {
-		ArrayList<MemorySegment> list = new ArrayList<MemorySegment>(numSegments);
-		for (int i = 0; i < numSegments; i++) {
-			list.add(MemorySegmentFactory.allocateUnpooledSegment(segmentSize));
-		}
-		return list;
 	}
 
 	private static void checkCorrectness(MutableObjectIterator<Tuple2<Long,Integer>> iter) throws Exception{
