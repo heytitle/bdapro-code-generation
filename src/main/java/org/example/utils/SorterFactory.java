@@ -4,7 +4,6 @@ package org.example.utils;
  * Created by heytitle on 11/28/16.
  */
 
-import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.typeutils.TypeComparator;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.api.common.typeutils.base.IntComparator;
@@ -19,12 +18,7 @@ import org.apache.flink.core.memory.MemorySegment;
 import org.apache.flink.core.memory.MemorySegmentFactory;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.NormalizedKeySorter;
-import org.apache.flink.runtime.operators.sort.QuickSort;
-import org.apache.flink.runtime.util.LongArrayList;
-import org.apache.flink.util.MutableObjectIterator;
-import org.apache.hadoop.hdfs.DFSClient;
 import org.example.Configuration;
-import org.example.utils.generator.RandomIntTuple2;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
