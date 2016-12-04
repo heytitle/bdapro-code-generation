@@ -164,6 +164,7 @@ public final class MySorter<T> implements InMemorySorter<T> {
 
 		this.shiftBitsIndexEntriesPerSegment = LongMath.log2(this.indexEntriesPerSegment, RoundingMode.UNNECESSARY);
 
+		Log.debug("segmentSize " + this.segmentSize );
 		Log.debug("numKeyBytes " + this.numKeyBytes); // 4 for 1 int
 		Log.debug("IndexEntrySize " + this.indexEntrySize);
 		Log.debug("IndexEntriesPerSegment " + this.indexEntriesPerSegment);
@@ -346,11 +347,11 @@ public final class MySorter<T> implements InMemorySorter<T> {
 
 	@Override
 	public int compare(int i, int j) {
-		final int bufferNumI = i / this.indexEntriesPerSegment;
-		final int segmentOffsetI = (i % this.indexEntriesPerSegment) * this.indexEntrySize;
+		final int bufferNumI = i >> this.shiftBitsIndexEntriesPerSegment;
+		final int segmentOffsetI = (i & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
 
-		final int bufferNumJ = j / this.indexEntriesPerSegment;
-		final int segmentOffsetJ = (j % this.indexEntriesPerSegment) * this.indexEntrySize;
+		final int bufferNumJ = j >> this.shiftBitsIndexEntriesPerSegment;
+		final int segmentOffsetJ = (j & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
 
 		final MemorySegment segI = this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);
