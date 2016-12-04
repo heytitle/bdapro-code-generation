@@ -21,3 +21,7 @@ o.e.Benchmarker.testSort          50000                                         
 ### Questions
 - Reduce `pageSize`, score is much lower. is that strange?
 - What exactly are `buffer`, `segment` in MemorySegment?
+
+
+## TODO
+- [ ] set up automatic test for checking correctness when building ( varying input size also )
