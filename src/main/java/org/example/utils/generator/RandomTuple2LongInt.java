@@ -3,13 +3,12 @@ package org.example.utils.generator;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.MutableObjectIterator;
 
-import java.io.IOException;
 import java.util.Random;
 
 /**
  * Created by heytitle on 11/28/16.
  */
-public class RandomIntTuple2 implements MutableObjectIterator<Tuple2<Integer,Integer>> {
+public class RandomTuple2LongInt implements MutableObjectIterator<Tuple2<Long,Integer>> {
 
 	private final long seed;
 
@@ -20,20 +19,20 @@ public class RandomIntTuple2 implements MutableObjectIterator<Tuple2<Integer,Int
 	private long count;
 
 
-	public RandomIntTuple2(long seed) {
+	public RandomTuple2LongInt(long seed) {
 		this(seed, Long.MAX_VALUE);
 	}
 
-	public RandomIntTuple2(long seed, long numRecords) {
+	public RandomTuple2LongInt(long seed, long numRecords) {
 		this.seed = seed;
 		this.numRecords = numRecords;
 		this.rnd = new Random(seed);
 	}
 
 	@Override
-	public Tuple2<Integer,Integer> next(Tuple2<Integer,Integer> reuse) {
+	public Tuple2<Long,Integer> next(Tuple2<Long,Integer> reuse) {
 		if (this.count++ < this.numRecords) {
-			reuse.setField(this.rnd.nextInt(), 0);
+			reuse.setField(this.rnd.nextLong(), 0);
 			reuse.setField(this.rnd.nextInt(), 1);
 			return reuse;
 		} else {
@@ -42,9 +41,9 @@ public class RandomIntTuple2 implements MutableObjectIterator<Tuple2<Integer,Int
 	}
 
 	@Override
-	public Tuple2<Integer,Integer> next() {
+	public Tuple2<Long,Integer> next() {
 		if (this.count++ < this.numRecords) {
-			return new Tuple2(this.rnd.nextInt(), this.rnd.nextInt());
+			return new Tuple2(this.rnd.nextLong(), this.rnd.nextInt());
 		} else {
 			return null;
 		}
