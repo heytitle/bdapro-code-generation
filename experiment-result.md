@@ -26,3 +26,4 @@ o.e.Benchmarker.testSort          50000                                         
 
 ## TODO
 - [ ] set up automatic test for checking correctness when building ( varying input size also )
+- [ ] http://janino-compiler.github.io/janino/
