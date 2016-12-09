@@ -13,6 +13,7 @@ import java.util.List;
 import org.apache.flink.api.common.typeutils.TypeComparator;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.core.memory.MemorySegment;
+import org.apache.flink.core.memory.MyMemorySegment;
 import org.apache.flink.hadoop.shaded.com.google.common.math.LongMath;
 import org.apache.flink.runtime.io.disk.RandomAccessInputView;
 import org.apache.flink.runtime.io.disk.SimpleCollectingOutputView;
@@ -118,6 +119,7 @@ public final class MySorter<T> implements InMemorySorter<T> {
 		this.serializer = serializer;
 		this.comparator = comparator;
 		this.useNormKeyUninverted = !comparator.invertNormalizedKey();
+
 
 		// check the size of the first buffer and record it. all further buffers must have the same size.
 		// the size must also be a power of 2
@@ -294,6 +296,8 @@ public final class MySorter<T> implements InMemorySorter<T> {
 		this.currentSortIndexOffset += this.indexEntrySize;
 		this.currentDataBufferOffset = newOffset;
 		this.numRecords++;
+
+
 		return true;
 	}
 
@@ -376,10 +380,10 @@ public final class MySorter<T> implements InMemorySorter<T> {
 		final int bufferNumJ = j >> this.shiftBitsIndexEntriesPerSegment;
 		final int segmentOffsetJ = (j & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
 
-		final MemorySegment segI = this.sortIndex.get(bufferNumI);
+		final MyMemorySegment segI = (MyMemorySegment)this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);
 
-		segI.swapBytes(this.swapBuffer, segJ, segmentOffsetI, segmentOffsetJ, this.indexEntrySize);
+		segI.fastSwapBytes(this.swapBuffer, segJ, segmentOffsetI, segmentOffsetJ, this.indexEntrySize);
 	}
 
 	@Override

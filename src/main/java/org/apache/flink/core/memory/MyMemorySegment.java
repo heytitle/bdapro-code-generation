@@ -6,17 +6,21 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+
 /**
  * Created by heytitle on 12/4/16.
  */
+
 public class MyMemorySegment extends MemorySegment {
 	public static final MyMemorySegment.MyMemorySegmentFactory FACTORY = new MyMemorySegment.MyMemorySegmentFactory();
 	private byte[] memory;
 
-	public MyMemorySegment(byte[] memory) {
+	public MyMemorySegment(byte[] memory){
 		this(memory, null);
 	}
 
+	private static final long LARGE_RECORD_TAG = 1L << 63;
+	private static final long POINTER_MASK = LARGE_RECORD_TAG - 1;
 
 
 	MyMemorySegment(byte[] memory, Object owner) {
@@ -122,28 +126,18 @@ public class MyMemorySegment extends MemorySegment {
 	}
 
 	public final void fastSwapBytes(byte[] tempBuffer, MemorySegment seg2, int offset1, int offset2, int len) {
-//		if((offset1 | offset2 | len | tempBuffer.length - len) >= 0) {
-			long thisPos = this.address + (long)offset1;
-			long otherPos = seg2.address + (long)offset2;
-//			if(thisPos <= this.addressLimit - (long)len && otherPos <= seg2.addressLimit - (long)len) {
-				UNSAFE.copyMemory(this.heapMemory, thisPos, tempBuffer, BYTE_ARRAY_BASE_OFFSET, (long)len);
-				UNSAFE.copyMemory(seg2.heapMemory, otherPos, this.heapMemory, thisPos, (long)len);
-				UNSAFE.copyMemory(tempBuffer, BYTE_ARRAY_BASE_OFFSET, seg2.heapMemory, otherPos, (long)len);
-				return;
-//			}
 
-//			if(this.address > this.addressLimit) {
-//				throw new IllegalStateException("this memory segment has been freed.");
-//			}
-//
-//			if(seg2.address > seg2.addressLimit) {
-//				throw new IllegalStateException("other memory segment has been freed.");
-//			}
-//		}
-//
-//		throw new IndexOutOfBoundsException(String.format("offset1=%d, offset2=%d, len=%d, bufferSize=%d, address1=%d, address2=%d", new Object[]{Integer.valueOf(offset1), Integer.valueOf(offset2), Integer.valueOf(len), Integer.valueOf(tempBuffer.length), Long.valueOf(this.address), Long.valueOf(seg2.address)}));
+		/* TODO : Reuse tempBuffer instead here */
+		long temp1 = this.getLong(offset1);
+		long temp2 = this.getLong(offset1+8);
+
+		this.putLong(offset1, seg2.getLong(offset2));
+		this.putLong(offset1+8, seg2.getLong(offset2+8));
+
+		seg2.putLong(offset2, temp1);
+		seg2.putLong(offset2+8, temp2);
+
 	}
-
 
 	public static final class MyMemorySegmentFactory implements MemorySegmentFactory.Factory {
 		public MyMemorySegment wrap(byte[] memory) {
