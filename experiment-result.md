@@ -25,5 +25,6 @@ o.e.Benchmarker.testSort          50000                                         
 
 
 ## TODO
+- [ ] create a main class that take `sort-class`, `input-file` as input and output sorting stat and sorted output
 - [ ] set up automatic test for checking correctness when building ( varying input size also )
 - [ ] http://janino-compiler.github.io/janino/
