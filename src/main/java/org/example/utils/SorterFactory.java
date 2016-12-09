@@ -54,7 +54,7 @@ public class SorterFactory {
 		Constructor constructor = sorterClass.getConstructor(types);
 
 		Object[] parameters = {
-			serializer, comparator, getMemory( Configuration.numSegments, Configuration.pageSize )
+			serializer, comparator, getMemory( Configuration.numSegments )
 		};
 
 		InMemorySorter<Tuple2<Long,Integer>> sorter = (InMemorySorter<Tuple2<Long,Integer>>) constructor.newInstance(parameters);
@@ -62,13 +62,19 @@ public class SorterFactory {
 		return  sorter;
 	}
 
-	private static List<MemorySegment> getMemory(int numSegments, int segmentSize) {
+	private static List<MemorySegment> getMemory(int numSegments) {
 		ArrayList<MemorySegment> list = new ArrayList<MemorySegment>(Configuration.numSegments);
 		for (int i = 0; i < Configuration.numSegments; i++) {
-				list.add(MyMemorySegment.FACTORY.allocateUnpooledSegment(segmentSize, (Object)null ));
+				list.add(createOneMemorySegment());
 //				list.add(MemorySegmentFactory.allocateUnpooledSegment(segmentSize));
 		}
 		return list;
+	}
+
+	public static MemorySegment createOneMemorySegment(){
+
+		return MyMemorySegment.FACTORY.allocateUnpooledSegment( Configuration.pageSize, (Object) null );
+
 	}
 
 }
