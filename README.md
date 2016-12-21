@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/heytitle/bdapro-code-generation.svg?branch=master)](https://travis-ci.org/heytitle/bdapro-code-generation)
+
 ## Build benchmark
 ```
 $ mvn clean install
