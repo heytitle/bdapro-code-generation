@@ -10,6 +10,7 @@ import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
 import org.apache.flink.util.MutableObjectIterator;
 import org.example.utils.SorterFactory;
+import org.example.utils.Validator;
 import org.example.utils.generator.RandomTuple2LongInt;
 import org.junit.Test;
 
@@ -38,39 +39,10 @@ public class SortTest extends TestCase {
 
 			qs.sort(sorter);
 
-			Tuple2<Long,Integer> readTarget = new Tuple2<Long,Integer>();
 
-			MutableObjectIterator<Tuple2<Long,Integer>> iter = sorter.getIterator();
-			iter.next(readTarget);
+			boolean isSorted = Validator.isSorted(sorter.getIterator());
 
-			int num = 0;
-			Long prev = null;
-			Long current;
-
-			boolean isCorrect = true;
-			do {
-				current = readTarget.getField(0);
-
-				if( prev == null ){
-					prev = current;
-					continue;
-				}
-
-
-				final long cmp = prev - current;
-
-				if (cmp > 0) {
-					isCorrect = false;
-					break;
-				}
-
-				prev = current;
-
-				num++;
-
-			} while( (readTarget = iter.next(readTarget)) != null ) ;
-
-			assertTrue("Data is sorted property: seed " + seed + " , no. records " + i, isCorrect);
+			assertTrue("Data is sorted property: seed " + seed + " , no. records " + i, isSorted);
 
 		}
 
