@@ -20,6 +20,8 @@ public class Validator {
 		Long prev = null;
 		Long current;
 
+		boolean isSorted = true;
+
 		do {
 			current = readTarget.getField(0);
 
@@ -29,10 +31,11 @@ public class Validator {
 			}
 
 
-			final long cmp = prev - current;
+			final long cmp = prev.compareTo(current);
 
-			if (cmp > 0) {
-				return false;
+			if ( cmp > 0 ) {
+				isSorted = false;
+				break;
 			}
 
 			prev = current;
@@ -41,6 +44,6 @@ public class Validator {
 
 		} while( (readTarget = iter.next(readTarget)) != null ) ;
 
-		return true;
+		return isSorted;
 	}
 }
