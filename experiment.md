@@ -3,7 +3,7 @@ Apache Flink currently uses `NormalizedKeySorter` to sort data. However, the
 sorter doesn't not aware of length of the sorting key, especially use of low-level methods during comparison and swapping keys.
 
 ##Current Flink's sorter performance
-[img](http://i.imgur.com/tI9Awpi.png)
+![img](http://i.imgur.com/tI9Awpi.png)
 
 ```
 testing configuration:
