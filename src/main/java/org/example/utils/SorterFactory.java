@@ -17,6 +17,7 @@ import org.apache.flink.core.memory.MemorySegment;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.example.Configuration;
 import org.apache.flink.core.memory.MyMemorySegment;
+import org.org.apache.flink.api.common.typeutils.base.MyLongComparator;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -38,7 +39,7 @@ public class SorterFactory {
 		TupleComparator<Tuple2<Long,Integer>> comparator = new TupleComparator<Tuple2<Long, Integer>>(
 			new int[]{0},
 			new TypeComparator[]{
-				new LongComparator(true)
+				new MyLongComparator(true)
 			},
 			new TypeSerializer[] {
 				IntSerializer.INSTANCE
@@ -76,5 +77,4 @@ public class SorterFactory {
 		return MyMemorySegment.FACTORY.allocateUnpooledSegment( Configuration.pageSize, (Object) null );
 
 	}
-
 }
