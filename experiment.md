@@ -22,7 +22,7 @@ java -Dcom.sun.management.jmxremote.port=3333 \
 ## Assumption
 We assume that the underlying records are `Tuple2<Long,Int>`. As a result, `indexEntrySize` is `16` bytes.
 
-## What we can do better (FLINK-....)
+## What we can do better (FLINK-4867)
 - Eliminate use of `copyMemory`. Under the assumption, we can use use `getLong` and `putLong` instead.
 More info : https://github.com/heytitle/bdapro-code-generation/blob/master/src/main/java/org/apache/flink/core/memory/MyMemorySegment.java#L130
 - `while` in `compare` can be unrolled because we know the exact number of iterations.
