@@ -1,6 +1,7 @@
 package org.example;
 
 import com.esotericsoftware.kryo.Kryo;
+import org.apache.commons.collections.BufferOverflowException;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
@@ -31,7 +32,14 @@ public class Benchmarker {
 	@Warmup(iterations = Configuration.BENCHMARK_WARMUP)
 	@Measurement(iterations = Configuration.BENCHMARK_ITERATION)
 	public MutableObjectIterator testSort(ThreadState ts ) throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+		long start_time = System.nanoTime();
+
 		ts.quickSort.sort(ts.sorter);
+
+		long end_time = System.nanoTime();
+		double difference = (end_time - start_time)/1e6;
+		System.out.println(" | sort: " + difference +"ms");
+
 		return ts.sorter.getIterator();
 	}
 
@@ -41,26 +49,37 @@ public class Benchmarker {
 		@Param({"org.apache.flink.runtime.operators.sort.NormalizedKeySorter", "org.example.MySorter"})
 		public String sorterClass;
 
-		@Param({"10000", "20000", "50000"})
-		public int noRecords;
+		@Param({"10000", "100000", "1000000"})
+		public long noRecords;
 
 		volatile InMemorySorter sorter;
 		volatile QuickSort quickSort;
 
-		@Setup(Level.Iteration)
+		@Setup(Level.Invocation)
 		public void writeRandomData() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 			sorter = SorterFactory.getSorter(sorterClass);
 			quickSort = new QuickSort();
+
+			long start_time = System.nanoTime();
 
 			RandomTuple2LongInt generator = new RandomTuple2LongInt(Configuration.SEED);
 
 			int num = -1;
 			Tuple2<Long,Integer> record = new Tuple2<Long,Integer>();
-			do {
+
+			while (num < noRecords){
 				generator.next(record);
+				boolean succeed = sorter.write(record);
+				if( !succeed ) {
+					throw new BufferOverflowException("Buffer space is not sufficient, only " + num  + "records can be added only.");
+				}
 				num++;
 			}
-			while (sorter.write(record) && num < noRecords );
+
+			long end_time = System.nanoTime();
+			double difference = (end_time - start_time)/1e6;
+
+			System.out.print(" setup " + noRecords + " records : " + difference +"ms");
 		}
 	}
 }
