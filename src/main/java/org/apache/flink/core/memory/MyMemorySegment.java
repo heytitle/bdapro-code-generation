@@ -1,5 +1,7 @@
 package org.apache.flink.core.memory;
 
+import org.example.utils.Log;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -137,6 +139,18 @@ public class MyMemorySegment extends MemorySegment {
 		seg2.putLong(offset2, temp1);
 		seg2.putLong(offset2+8, temp2);
 
+	}
+
+	public final int fastCompare(MemorySegment seg2, int offset1, int offset2, int len) {
+
+		long l1 = this.getLongBigEndian(offset1); // TODO: This could be optimized for litter endian machine
+		long l2 = seg2.getLongBigEndian(offset2);
+
+		if(l1 != l2) {
+			return l1 < l2 ^ l1 < 0L ^ l2 < 0L? -1 : 1 ;
+		}
+
+		return 0;
 	}
 
 	public static final class MyMemorySegmentFactory implements MemorySegmentFactory.Factory {
