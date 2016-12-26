@@ -18,13 +18,16 @@ o.e.Benchmarker.testSort          50000  org.apache.flink.runtime.operators.sort
 o.e.Benchmarker.testSort          50000                                         org.example.MySorter    ss      100  16.745        1.324     ms
 ```
 
-### Questions
-- Reduce `pageSize`, score is much lower. is that strange?
-- What exactly are `buffer`, `segment` in MemorySegment?
-- Is there a way to copy `sorter`, so we don't have to instantiate it every iteration?
-
 
 ## TODO
-- [ ] create a main class that take `sort-class`, `input-file` as input and output sorting stat and sorted output
-- [ ] set up automatic test for checking correctness when building ( varying input size also )
+- [x] create a main class that take `sort-class`, `input-file` as input and output sorting stat and sorted output
+- [x] set up automatic test for checking correctness when building ( varying input size also )
+- [x] Hot coding on local and IBM cluster
+- [ ] Report ...
 - [ ] http://janino-compiler.github.io/janino/
+
+### Questions
+- ~Reduce `pageSize`, score is much lower. is that strange?
+- ~What exactly are `buffer`, `segment` in MemorySegment?
+- ~Is there a way to copy `sorter`, so we don't have to instantiate it every iteration?
+- What is the 8 bytes prefix in IndexEntry? a pointer to original record?

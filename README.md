@@ -1,5 +1,17 @@
 [![Build Status](https://travis-ci.org/heytitle/bdapro-code-generation.svg?branch=master)](https://travis-ci.org/heytitle/bdapro-code-generation)
 
+## Build test app
+```
+$ mvn clean compile assembly:single
+```
+
+## Run app
+```
+JAVA_DEBUG=true \
+WAIT_FOR_START=true \
+java -XX:+UnlockCommercialFeatures -XX:+FlightRecorder -jar target/bdapro-code-generation-1.0-jar-with-dependencies.jar <SORTER_CLASS>
+```
+
 ## Build benchmark
 ```
 $ mvn clean install
