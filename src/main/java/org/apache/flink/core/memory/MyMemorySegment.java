@@ -143,8 +143,8 @@ public class MyMemorySegment extends MemorySegment {
 
 	public final int fastCompare(MemorySegment seg2, int offset1, int offset2, int len) {
 
-		long l1 = this.getLongBigEndian(offset1); // TODO: This could be optimized for litter endian machine
-		long l2 = seg2.getLongBigEndian(offset2);
+		long l1 = this.getLongLittleEndian(offset1); // TODO: This could be optimized for litter endian machine
+		long l2 = seg2.getLongLittleEndian(offset2);
 
 		if(l1 != l2) {
 			return l1 < l2 ^ l1 < 0L ^ l2 < 0L? -1 : 1 ;
