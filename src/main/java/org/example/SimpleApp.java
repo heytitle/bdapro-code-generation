@@ -11,6 +11,7 @@ import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
 import org.apache.flink.util.MutableObjectIterator;
 import org.example.utils.Log;
+import org.example.utils.SortHandler;
 import org.example.utils.SorterFactory;
 import org.example.utils.Validator;
 import org.example.utils.generator.RandomTuple2LongInt;
@@ -44,11 +45,18 @@ public class SimpleApp {
 
 		fillRandomData(sorter);
 
+		waitForUser("Press Enter to sort");
+
 		QuickSort qs = new QuickSort();
 
-		waitForUser("Press Enter to sort");
+		long start_time = System.nanoTime();
+
 		qs.sort(sorter);
-		waitForUser("Finish sorting, press Enter for next");
+
+		long end_time = System.nanoTime();
+		double difference = (end_time - start_time)/1e6;
+		System.out.println("sorting time : " + difference +"ms");
+		waitForUser("Press Enter to continue");
 
 		boolean isSorted = Validator.isSorted(sorter.getIterator());
 		if( isSorted ) {
