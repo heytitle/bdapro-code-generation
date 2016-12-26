@@ -4,12 +4,7 @@ sorter doesn't not aware of length of the sorting key, especially use of low-lev
 
 ##Current Flink's sorter performance
 ![img](http://i.imgur.com/tI9Awpi.png)
-
-```
-testing configuration:
-- IBM Machine (big endian architecture)
-- 4GB Java Heap
-```
+Testing on `IBM Machine` with `4GB` Heap size and big endian architecture.
 
 As can be seen from the figure, `Unsafe.copyMemory` calls completely dominate sorting performance.
 
@@ -17,10 +12,10 @@ As can be seen from the figure, `Unsafe.copyMemory` calls completely dominate so
 $ JAVA_DEBUG=true \
 WAIT_FOR_START=true \
 java -Dcom.sun.management.jmxremote.port=3333 \
--Dcom.sun.management.jmxremote.ssl=false \
--Dcom.sun.management.jmxremote.authenticate=false \
--Xmx4g \
--jar bdapro-code-generation-1.0-jar-with-dependencies.jar $1 \
+  -Dcom.sun.management.jmxremote.ssl=false \
+  -Dcom.sun.management.jmxremote.authenticate=false \
+  -Xmx4g \
+  -jar bdapro-code-generation-1.0-jar-with-dependencies.jar
 ```
 
 # Improvement
@@ -36,8 +31,9 @@ More info : https://github.com/heytitle/bdapro-code-generation/blob/master/src/m
 - [DOING] Eliminate reversing bytes for little endianness machine
 
 ##Result
+### EC2 m4.large
 ```
-# On EC2 m4.large, openjdk-8
+# openjdk-8
 # Run complete. Total time: 00:26:25
 
 Benchmark                   (noRecords)                                                (sorterClass)  Mode  Samples    Score  Score error  Units
@@ -49,6 +45,7 @@ o.e.Benchmarker.testSort        1000000  org.apache.flink.runtime.operators.sort
 o.e.Benchmarker.testSort        1000000                                         org.example.MySorter    ss     1000  335.605        1.996     ms
 ```
 
+### IBM Machine
 ```
 # openjdk version "1.8.0_101"
 # Run complete. Total time: 01:05:32
