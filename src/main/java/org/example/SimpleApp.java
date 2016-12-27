@@ -41,21 +41,24 @@ public class SimpleApp {
 		Log.debug("Instantiate sorter : " + sorterClass );
 
 
-		InMemorySorter sorter = SorterFactory.getSorter(sorterClass);
 
+		InMemorySorter sorter = null;
+
+		sorter  = SorterFactory.getSorter(sorterClass);
 		fillRandomData(sorter);
-
-		waitForUser("Press Enter to sort");
 
 		QuickSort qs = new QuickSort();
 
+		waitForUser("Press Enter to sort");
 		long start_time = System.nanoTime();
 
 		qs.sort(sorter);
 
 		long end_time = System.nanoTime();
 		double difference = (end_time - start_time)/1e6;
-		System.out.println("sorting time : " + difference +"ms");
+		System.out.println( ": sorting time : " + difference +"ms");
+
+
 		waitForUser("Press Enter to continue");
 
 		boolean isSorted = Validator.isSorted(sorter.getIterator());

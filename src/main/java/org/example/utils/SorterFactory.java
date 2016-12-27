@@ -14,6 +14,7 @@ import org.apache.flink.api.java.typeutils.runtime.TupleComparator;
 import org.apache.flink.api.java.typeutils.runtime.TupleSerializer;
 
 import org.apache.flink.core.memory.MemorySegment;
+import org.apache.flink.core.memory.MemorySegmentFactory;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.example.Configuration;
 import org.apache.flink.core.memory.MyMemorySegment;
@@ -54,7 +55,7 @@ public class SorterFactory {
 		Constructor constructor = sorterClass.getConstructor(types);
 
 		Object[] parameters = {
-			serializer, comparator, getMemory( Configuration.numSegments )
+			serializer, comparator, getMemory( sorterName )
 		};
 
 		InMemorySorter<Tuple2<Long,Integer>> sorter = (InMemorySorter<Tuple2<Long,Integer>>) constructor.newInstance(parameters);
@@ -62,19 +63,18 @@ public class SorterFactory {
 		return  sorter;
 	}
 
-	private static List<MemorySegment> getMemory(int numSegments) {
+	private static List<MemorySegment> getMemory(String sorterName) {
 		ArrayList<MemorySegment> list = new ArrayList<MemorySegment>(Configuration.numSegments);
 		for (int i = 0; i < Configuration.numSegments; i++) {
-				list.add(createOneMemorySegment());
-//				list.add(MemorySegmentFactory.allocateUnpooledSegment(segmentSize));
+			MemorySegment mem = null;
+			if( sorterName.equals("org.example.MySorter")) {
+				mem = MyMemorySegment.FACTORY.allocateUnpooledSegment( Configuration.pageSize, (Object) null );
+			} else {
+				mem = MemorySegmentFactory.allocateUnpooledSegment( Configuration.pageSize, (Object) null);
+			}
+			list.add(mem);
 		}
 		return list;
-	}
-
-	public static MemorySegment createOneMemorySegment(){
-
-		return MyMemorySegment.FACTORY.allocateUnpooledSegment( Configuration.pageSize, (Object) null );
-
 	}
 
 }

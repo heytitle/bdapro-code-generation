@@ -8,6 +8,8 @@ Testing on `IBM Machine` with `4GB` Heap size and big endian architecture.
 
 As can be seen from the figure, `Unsafe.copyMemory` calls completely dominate sorting performance.
 
+NOTE: on my machine, `copyMemory` didn't show up in profiling. Why?
+
 ```
 $ JAVA_DEBUG=true \
 WAIT_FOR_START=true \
@@ -28,7 +30,9 @@ More info : https://github.com/heytitle/bdapro-code-generation/blob/master/src/m
 - `while` in `compare` can be unrolled because we know the exact number of iterations.
 More info : https://github.com/heytitle/bdapro-code-generation/blob/master/src/main/java/org/apache/flink/core/memory/MyMemorySegment.java#L144
 - [DOING] Virtual method calls
+  - performance didnt' improve much
 - [DOING] Eliminate reversing bytes for little endianness machine
+  - performance didnt' improve much
 
 ##Result
 ### EC2 m4.large
