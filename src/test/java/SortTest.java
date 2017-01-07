@@ -36,8 +36,7 @@ public class SortTest extends TestCase {
 			"org.example.sorter.FindSegmentIndexViaBitOperators",
 			"org.example.sorter.EmbedQuickSortInside",
 			"org.example.sorter.UseLittleEndian",
-			"org.example.sorter.RemoveUnnecessaryBranching",
-			"org.example.sorter.RemoveUnnecessaryBranchingWithPrefix"
+			"org.example.sorter.RemoveUnnecessaryBranching"
 		};
 
 		for ( String sorterName: sorters ) {
