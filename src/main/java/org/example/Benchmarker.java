@@ -4,6 +4,7 @@ import com.esotericsoftware.kryo.Kryo;
 import org.apache.commons.collections.BufferOverflowException;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
+import org.apache.flink.runtime.operators.sort.IndexedSorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
 import org.apache.flink.util.MutableObjectIterator;
 import org.example.utils.SorterFactory;
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 //import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.*;
+import scala.util.Random;
 //import org.openjdk.jmh.annotations.Scope;
 //import org.openjdk.jmh.annotations.State;
 //import org.openjdk.jmh.annotations.Warmup;
@@ -43,22 +45,34 @@ public class Benchmarker {
 		return ts.sorter.getIterator();
 	}
 
-
 	@State(Scope.Thread)
 	public static class ThreadState {
-		@Param({"org.apache.flink.runtime.operators.sort.NormalizedKeySorter", "org.example.MySorter"})
+		@Param({
+			"org.apache.flink.runtime.operators.sort.NormalizedKeySorter",
+			"org.example.sorter.CompareUnrollLoop",
+			"org.example.sorter.SwapViaPutGetLong",
+			"org.example.sorter.FindSegmentIndexViaBitOperators",
+			"org.example.sorter.EmbedQuickSortInside",
+			"org.example.sorter.UseLittleEndian"
+		})
+
 		public String sorterClass;
 
 		@Param({"10000", "100000", "1000000"})
 		public long noRecords;
 
 		volatile InMemorySorter sorter;
-		volatile QuickSort quickSort;
+		volatile IndexedSorter quickSort;
 
 		@Setup(Level.Invocation)
 		public void writeRandomData() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 			sorter = SorterFactory.getSorter(sorterClass);
-			quickSort = new QuickSort();
+			if( sorter.equals("org.example.sorter.EmbedQuickSortInside") ) {
+				quickSort = (IndexedSorter)sorter;
+			} else {
+				quickSort = new QuickSort();
+
+			}
 
 			long start_time = System.nanoTime();
 
@@ -82,4 +96,91 @@ public class Benchmarker {
 			System.out.print(" setup " + noRecords + " records : " + difference +"ms");
 		}
 	}
+
+
+//	@Benchmark
+//	public long testDevisionByBitWise() {
+//
+//		long acc = 0;
+//
+//		for( int i = 0; i < 1000; i+=4 ){
+//			acc = i >> 2;
+//		}
+//
+//		return acc;
+//	}
+//
+//	@Benchmark
+//	public long testDevisionNormal() {
+//
+//		long acc = 0;
+//
+//		for( int i = 0; i < 1000; i+=4 ){
+//			acc = i / 4;
+//		}
+//
+//		return acc;
+//	}
+//
+//	@Benchmark
+//	public long testModuloByBitWise() {
+//
+//		long acc = 0;
+//
+//		for( int i = 0; i < 1000; i+=4 ){
+//			acc = i & (4-1);
+//		}
+//
+//		return acc;
+//	}
+//
+//	@Benchmark
+//	public long testModuloNormal() {
+//
+//		long acc = 0;
+//
+//		for( int i = 0; i < 1000; i+=4 ){
+//			acc = i % 4;
+//		}
+//
+//		return acc;
+//	}
+
+//	@State(Scope.Thread)
+//	public static class SortState {
+//
+//		@Param({"true"})
+//		public boolean ascOrder;
+//	}
+//
+//	@Benchmark
+//	@Warmup(iterations = 5)
+//	@Measurement(iterations = 10)
+//	public long testShorthandIf(SortState ts) {
+//
+//		long acc = 0;
+//
+//		for( int i = 0; i < 1000; i+=4 ){
+//
+//			acc = ts.ascOrder ? -i : i;
+//		}
+//
+//		return acc;
+//	}
+//
+//	@Benchmark
+//	@Warmup(iterations = 5)
+//	@Measurement(iterations = 10)
+//	public long testMultiplyWithPrefix(SortState ts) {
+//
+//		long acc = 0;
+//		int prefix = ts.ascOrder ? -1 : 1;
+//
+//		for( int i = 0; i < 1000; i+=4 ){
+//
+//			acc = prefix*i;
+//		}
+//
+//		return acc;
+//	}
 }
