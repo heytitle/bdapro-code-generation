@@ -24,6 +24,10 @@ o.e.Benchmarker.testSort          50000                                         
 - [x] set up automatic test for checking correctness when building ( varying input size also )
 - [x] Hot coding on local and IBM cluster
 - [ ] Report ...
+- [x] virtual method elimination
+  performance didn't improve much
+- [x] endianness optimized
+  performance didn't improve much
 - [ ] http://janino-compiler.github.io/janino/
 
 ### Questions
