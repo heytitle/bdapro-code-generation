@@ -18,6 +18,7 @@ import org.apache.flink.core.memory.MemorySegmentFactory;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.example.Configuration;
 import org.apache.flink.core.memory.MyMemorySegment;
+import org.org.apache.flink.api.common.typeutils.base.LongComparatorLittleEndian;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -29,21 +30,29 @@ public class SorterFactory {
 
 	public static InMemorySorter getSorter( String sorterName ) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
+		TypeSerializer[] insideSerializers = new TypeSerializer[] {
+			LongSerializer.INSTANCE,
+			IntSerializer.INSTANCE
+		};
+
 		TupleSerializer<Tuple2<Long,Integer>> serializer = new TupleSerializer<Tuple2<Long, Integer>>(
 			(Class<Tuple2<Long, Integer>>) (Class<?>) Tuple2.class,
-			new TypeSerializer[] {LongSerializer.INSTANCE,
-				IntSerializer.INSTANCE
-			}
+			insideSerializers
 		);
 
-		TupleComparator<Tuple2<Long,Integer>> comparator = new TupleComparator<Tuple2<Long, Integer>>(
-			new int[]{0},
-			new TypeComparator[]{
+		TypeComparator[] typeComp = null;
+		if( sorterName.equals("org.example.sorter.UseLittleEndian") ) {
+			typeComp = new TypeComparator[] {
+				new LongComparatorLittleEndian(true)
+			};
+		} else {
+			typeComp = new TypeComparator[] {
 				new LongComparator(true)
-			},
-			new TypeSerializer[] {
-				IntSerializer.INSTANCE
-			}
+			};
+		}
+
+		TupleComparator<Tuple2<Long,Integer>> comparator = new TupleComparator<Tuple2<Long, Integer>>(
+			new int[]{0}, typeComp, insideSerializers
 		);
 
 		Class sorterClass = Class.forName(sorterName);

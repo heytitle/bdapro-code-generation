@@ -4,11 +4,11 @@
 
 import junit.framework.TestCase;
 import org.apache.commons.collections.BufferOverflowException;
-import org.apache.commons.math3.util.MultidimensionalCounter;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
+import org.apache.flink.runtime.operators.sort.IndexedSorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
-import org.apache.flink.util.MutableObjectIterator;
+import org.example.sorter.EmbedQuickSortInside;
 import org.example.utils.SorterFactory;
 import org.example.utils.Validator;
 import org.example.utils.generator.RandomTuple2LongInt;
@@ -27,24 +27,41 @@ public class SortTest extends TestCase {
 
 	@Test
 	public  void testSort() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-		int[] noRecords = new int[]{ 1000, 1000000 };
+		int[] noRecords = new int[]{1000, 1000000};
 
-		for( int i : noRecords ) {
-			int seed = new Random().nextInt();
-			InMemorySorter sorter = SorterFactory.getSorter("org.example.MySorter");
+		String[] sorters = new String[]{
+			"org.example.MySorter",
+			"org.example.sorter.CompareUnrollLoop",
+			"org.example.sorter.SwapViaPutGetLong",
+			"org.example.sorter.FindSegmentIndexViaBitOperators",
+			"org.example.sorter.EmbedQuickSortInside",
+			"org.example.sorter.UseLittleEndian",
+			"org.example.sorter.RemoveUnnecessaryBranching",
+			"org.example.sorter.RemoveUnnecessaryBranchingWithPrefix"
+		};
 
-			System.out.println("Testing  sorting on " + i + " records and seed " + seed );
+		for ( String sorterName: sorters ) {
+			System.out.println("Testing  " + sorterName );
+			for( int i : noRecords ) {
+				int seed = new Random().nextInt();
+				InMemorySorter sorter = SorterFactory.getSorter(sorterName);
 
-			fillRandomData(sorter, seed, i );
+				fillRandomData(sorter, seed, i );
 
-			qs.sort(sorter);
+				if( sorterName.equals("org.example.sorter.EmbedQuickSortInside") ) {
+					((IndexedSorter)sorter).sort(sorter);
+				} else {
+					qs.sort(sorter);
+				}
 
 
-			boolean isSorted = Validator.isSorted(sorter.getIterator());
+				boolean isSorted = Validator.isSorted(sorter.getIterator());
 
-			assertTrue("Data is sorted property: seed " + seed + " , no. records " + i, isSorted);
+				assertTrue("Data is sorted property: seed " + seed + " , no. records " + i, isSorted);
 
+			}
 		}
+
 
 
 	}
