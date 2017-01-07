@@ -1,17 +1,11 @@
 package org.example;
 
 import org.apache.commons.collections.BufferOverflowException;
-import org.apache.flink.api.common.io.SerializedOutputFormat;
-import org.apache.flink.api.java.io.SplitDataProperties;
 import org.apache.flink.api.java.tuple.Tuple2;
 
-import org.apache.flink.core.memory.MemorySegment;
-import org.apache.flink.core.memory.MemorySegmentFactory;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
-import org.apache.flink.util.MutableObjectIterator;
 import org.example.utils.Log;
-import org.example.utils.SortHandler;
 import org.example.utils.SorterFactory;
 import org.example.utils.Validator;
 import org.example.utils.generator.RandomTuple2LongInt;
@@ -21,8 +15,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SimpleApp {
 
@@ -67,10 +59,6 @@ public class SimpleApp {
 		} else {
 			throw new Error("Data is NOT sorted properly");
 		}
-
-
-
-		//TODO: output result to destination file.
 	}
 
 	public static void fillRandomData(InMemorySorter sorter) throws IOException {
