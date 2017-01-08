@@ -33,10 +33,11 @@ public class SortTest extends TestCase {
 			"org.example.MySorter",
 			"org.example.sorter.CompareUnrollLoop",
 			"org.example.sorter.SwapViaPutGetLong",
-			"org.example.sorter.FindSegmentIndexViaBitOperators",
+			"org.example.sorter.FindSegmentIndexViaBitwiseOperators",
 			"org.example.sorter.EmbedQuickSortInside",
 			"org.example.sorter.UseLittleEndian",
-			"org.example.sorter.RemoveUnnecessaryBranching"
+			"org.example.sorter.RemoveUnnecessaryBranching",
+			"org.example.sorter.EverythingExceptQuickSort"
 		};
 
 		for ( String sorterName: sorters ) {

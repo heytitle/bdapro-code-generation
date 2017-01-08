@@ -51,9 +51,11 @@ public class Benchmarker {
 			"org.apache.flink.runtime.operators.sort.NormalizedKeySorter",
 			"org.example.sorter.CompareUnrollLoop",
 			"org.example.sorter.SwapViaPutGetLong",
-			"org.example.sorter.FindSegmentIndexViaBitOperators",
+			"org.example.sorter.FindSegmentIndexViaBitwiseOperators",
 			"org.example.sorter.EmbedQuickSortInside",
-			"org.example.sorter.UseLittleEndian"
+			"org.example.sorter.UseLittleEndian",
+			"org.example.sorter.RemoveUnnecessaryBranching",
+			"org.example.sorter.EverythingExceptQuickSort"
 		})
 
 		public String sorterClass;

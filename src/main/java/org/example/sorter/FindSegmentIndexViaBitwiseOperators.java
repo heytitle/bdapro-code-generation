@@ -38,7 +38,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class FindSegmentIndexViaBitOperators<T> implements InMemorySorter<T> {
+public final class FindSegmentIndexViaBitwiseOperators<T> implements InMemorySorter<T> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(org.apache.flink.runtime.operators.sort.NormalizedKeySorter.class);
 
@@ -111,12 +111,12 @@ public final class FindSegmentIndexViaBitOperators<T> implements InMemorySorter<
 	// Constructors / Destructors
 	// -------------------------------------------------------------------------
 
-	public FindSegmentIndexViaBitOperators(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
+	public FindSegmentIndexViaBitwiseOperators(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
 		this(serializer, comparator, memory, DEFAULT_MAX_NORMALIZED_KEY_LEN);
 	}
 
-	public FindSegmentIndexViaBitOperators(TypeSerializer<T> serializer, TypeComparator<T> comparator,
-										   List<MemorySegment> memory, int maxNormalizedKeyBytes)
+	public FindSegmentIndexViaBitwiseOperators(TypeSerializer<T> serializer, TypeComparator<T> comparator,
+											   List<MemorySegment> memory, int maxNormalizedKeyBytes)
 	{
 		if (serializer == null || comparator == null || memory == null) {
 			throw new NullPointerException();
