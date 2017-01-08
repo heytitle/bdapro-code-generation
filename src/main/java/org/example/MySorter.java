@@ -357,10 +357,10 @@ public final class MySorter<T> implements InMemorySorter<T> {
 		final int bufferNumJ = j >> this.shiftBitsIndexEntriesPerSegment;
 		final int segmentOffsetJ = (j & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
 
-		final MemorySegment segI = this.sortIndex.get(bufferNumI);
-		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);
+		final MyMemorySegment segI = (MyMemorySegment)this.sortIndex.get(bufferNumI);
+		final MyMemorySegment segJ = (MyMemorySegment)this.sortIndex.get(bufferNumJ);
 
-		int val = ((MyMemorySegment)segI).fastCompare(segJ, segmentOffsetI + OFFSET_LEN, segmentOffsetJ + OFFSET_LEN, this.numKeyBytes);
+		int val = segI.fastCompare(segJ, segmentOffsetI + OFFSET_LEN, segmentOffsetJ + OFFSET_LEN, this.numKeyBytes);
 //		int val = segI.compare(segJ, segmentOffsetI + OFFSET_LEN, segmentOffsetJ + OFFSET_LEN, this.numKeyBytes);
 
 		if (val != 0 || this.normalizedKeyFullyDetermines) {
