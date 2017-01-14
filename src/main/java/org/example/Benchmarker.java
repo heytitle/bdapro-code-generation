@@ -55,7 +55,7 @@ public class Benchmarker {
 			"org.example.sorter.EmbedQuickSortInside",
 			"org.example.sorter.UseLittleEndian",
 			"org.example.sorter.RemoveUnnecessaryBranching",
-			"org.example.sorter.EverythingExceptQuickSort"
+			"org.example.sorter.EverythingExceptQuickSortEmbedded"
 		})
 
 		public String sorterClass;
