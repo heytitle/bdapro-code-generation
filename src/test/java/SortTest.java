@@ -37,7 +37,7 @@ public class SortTest extends TestCase {
 			"org.example.sorter.EmbedQuickSortInside",
 			"org.example.sorter.UseLittleEndian",
 			"org.example.sorter.RemoveUnnecessaryBranching",
-			"org.example.sorter.EverythingExceptQuickSort"
+			"org.example.sorter.EverythingExceptQuickSortEmbedded"
 		};
 
 		for ( String sorterName: sorters ) {

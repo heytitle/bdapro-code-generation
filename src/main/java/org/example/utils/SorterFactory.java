@@ -22,6 +22,7 @@ import org.org.apache.flink.api.common.typeutils.base.LongComparatorLittleEndian
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +42,8 @@ public class SorterFactory {
 		);
 
 		TypeComparator[] typeComp = null;
-		if( sorterName.equals("org.example.sorter.UseLittleEndian") ) {
+		if( sorterName.equals("org.example.sorter.UseLittleEndian")
+				|| ( sorterName.equals("org.example.sorter.EverythingExceptQuickSortEmbedded") && ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN ) ) {
 			typeComp = new TypeComparator[] {
 				new LongComparatorLittleEndian(true)
 			};

@@ -38,7 +38,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class EverythingExceptQuickSort<T> implements InMemorySorter<T> {
+public final class EverythingExceptQuickSortEmbedded<T> implements InMemorySorter<T> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(org.apache.flink.runtime.operators.sort.NormalizedKeySorter.class);
 
@@ -110,12 +110,12 @@ public final class EverythingExceptQuickSort<T> implements InMemorySorter<T> {
 	// Constructors / Destructors
 	// -------------------------------------------------------------------------
 
-	public EverythingExceptQuickSort(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
+	public EverythingExceptQuickSortEmbedded(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
 		this(serializer, comparator, memory, DEFAULT_MAX_NORMALIZED_KEY_LEN);
 	}
 
-	public EverythingExceptQuickSort(TypeSerializer<T> serializer, TypeComparator<T> comparator,
-									 List<MemorySegment> memory, int maxNormalizedKeyBytes)
+	public EverythingExceptQuickSortEmbedded(TypeSerializer<T> serializer, TypeComparator<T> comparator,
+											 List<MemorySegment> memory, int maxNormalizedKeyBytes)
 	{
 		if (serializer == null || comparator == null || memory == null) {
 			throw new NullPointerException();
@@ -549,8 +549,8 @@ public final class EverythingExceptQuickSort<T> implements InMemorySorter<T> {
 
 	public final int fastCompare(MemorySegment seg1, MemorySegment seg2, int offset1, int offset2) {
 
-		long l1 = seg1.getLongBigEndian(offset1);
-		long l2 = seg2.getLongBigEndian(offset2);
+		long l1 = seg1.getLong(offset1);
+		long l2 = seg2.getLong(offset2);
 
 		if(l1 != l2) {
 			return l1 < l2 ^ l1 < 0L ^ l2 < 0L? -1 : 1 ;
