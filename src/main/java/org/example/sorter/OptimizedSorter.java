@@ -25,19 +25,21 @@ import org.apache.flink.runtime.io.disk.RandomAccessInputView;
 import org.apache.flink.runtime.io.disk.SimpleCollectingOutputView;
 import org.apache.flink.runtime.io.disk.iomanager.ChannelWriterOutputView;
 import org.apache.flink.runtime.memory.ListMemorySegmentSource;
-import org.apache.flink.runtime.operators.sort.InMemorySorter;
-import org.apache.flink.runtime.operators.sort.LargeRecordHandler;
+import org.apache.flink.runtime.operators.sort.*;
+import org.apache.flink.shaded.com.google.common.math.LongMath;
 import org.apache.flink.util.MutableObjectIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.nio.ByteOrder;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class UseLittleEndian<T> implements InMemorySorter<T> {
+/* This sorter merges all optimizations from sorter.individual.optimization.* together */
+
+public final class OptimizedSorter<T> implements InMemorySorter<T>, IndexedSorter {
 
 	private static final Logger LOG = LoggerFactory.getLogger(org.apache.flink.runtime.operators.sort.NormalizedKeySorter.class);
 
@@ -103,23 +105,19 @@ public final class UseLittleEndian<T> implements InMemorySorter<T> {
 
 	private final boolean useNormKeyUninverted;
 
+	private final int shiftBitsIndexEntriesPerSegment;
 
 	// -------------------------------------------------------------------------
 	// Constructors / Destructors
 	// -------------------------------------------------------------------------
 
-	public UseLittleEndian(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
+	public OptimizedSorter(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
 		this(serializer, comparator, memory, DEFAULT_MAX_NORMALIZED_KEY_LEN);
 	}
 
-	public UseLittleEndian(TypeSerializer<T> serializer, TypeComparator<T> comparator,
+	public OptimizedSorter(TypeSerializer<T> serializer, TypeComparator<T> comparator,
 						   List<MemorySegment> memory, int maxNormalizedKeyBytes)
 	{
-
-		if( (ByteOrder.nativeOrder() != ByteOrder.LITTLE_ENDIAN) ) {
-			new NumberFormatException("Machine is not using little endian");
-		}
-
 		if (serializer == null || comparator == null || memory == null) {
 			throw new NullPointerException();
 		}
@@ -179,6 +177,8 @@ public final class UseLittleEndian<T> implements InMemorySorter<T> {
 		// set to initial state
 		this.currentSortIndexSegment = nextMemorySegment();
 		this.sortIndex.add(this.currentSortIndexSegment);
+
+		this.shiftBitsIndexEntriesPerSegment = LongMath.log2(this.indexEntriesPerSegment, RoundingMode.UNNECESSARY);
 	}
 
 	// -------------------------------------------------------------------------
@@ -350,39 +350,32 @@ public final class UseLittleEndian<T> implements InMemorySorter<T> {
 
 	@Override
 	public int compare(int i, int j) {
-		final int bufferNumI = i / this.indexEntriesPerSegment;
-		final int segmentOffsetI = (i % this.indexEntriesPerSegment) * this.indexEntrySize;
+		final int bufferNumI = i >> this.shiftBitsIndexEntriesPerSegment;
+		final int segmentOffsetI = (i & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
 
-		final int bufferNumJ = j / this.indexEntriesPerSegment;
-		final int segmentOffsetJ = (j % this.indexEntriesPerSegment) * this.indexEntrySize;
+		final int bufferNumJ = j >> this.shiftBitsIndexEntriesPerSegment;
+		final int segmentOffsetJ = (j & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
 
 		final MemorySegment segI = this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);
 
-		int val = this.compareUsingLittleEndian( segI, segJ, segmentOffsetI + OFFSET_LEN, segmentOffsetJ + OFFSET_LEN);
+		int val = this.fastCompare(segI, segJ, segmentOffsetI + OFFSET_LEN, segmentOffsetJ + OFFSET_LEN);
 
-		if (val != 0 || this.normalizedKeyFullyDetermines) {
-			return this.useNormKeyUninverted ? val : -val;
-		}
-
-		final long pointerI = segI.getLong(segmentOffsetI) & POINTER_MASK;
-		final long pointerJ = segJ.getLong(segmentOffsetJ) & POINTER_MASK;
-
-		return compareRecords(pointerI, pointerJ);
+		return this.useNormKeyUninverted ? val : -val;
 	}
 
 	@Override
 	public void swap(int i, int j) {
-		final int bufferNumI = i / this.indexEntriesPerSegment;
-		final int segmentOffsetI = (i % this.indexEntriesPerSegment) * this.indexEntrySize;
+		final int bufferNumI = i >> this.shiftBitsIndexEntriesPerSegment;
+		final int segmentOffsetI = (i & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
 
-		final int bufferNumJ = j / this.indexEntriesPerSegment;
-		final int segmentOffsetJ = (j % this.indexEntriesPerSegment) * this.indexEntrySize;
+		final int bufferNumJ = j >> this.shiftBitsIndexEntriesPerSegment;
+		final int segmentOffsetJ = (j & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
 
 		final MemorySegment segI = this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);
 
-		segI.swapBytes(this.swapBuffer, segJ, segmentOffsetI, segmentOffsetJ, this.indexEntrySize);
+		this.fastSwapBytes(segI, segJ, segmentOffsetI, segmentOffsetJ);
 	}
 
 	@Override
@@ -555,7 +548,7 @@ public final class UseLittleEndian<T> implements InMemorySorter<T> {
 		}
 	}
 
-	public final int compareUsingLittleEndian(MemorySegment seg1, MemorySegment seg2, int offset1, int offset2) {
+	public final int fastCompare(MemorySegment seg1, MemorySegment seg2, int offset1, int offset2) {
 
 		long l1 = seg1.getLong(offset1);
 		long l2 = seg2.getLong(offset2);
@@ -567,6 +560,125 @@ public final class UseLittleEndian<T> implements InMemorySorter<T> {
 		return 0;
 	}
 
+	public final void fastSwapBytes(MemorySegment seg1, MemorySegment seg2, int offset1, int offset2) {
+		long temp1 = seg1.getLong(offset1);
+		long temp2 = seg1.getLong(offset1+8);
 
+		seg1.putLong(offset1, seg2.getLong(offset2));
+		seg1.putLong(offset1+8, seg2.getLong(offset2+8));
+
+		seg2.putLong(offset2, temp1);
+		seg2.putLong(offset2+8, temp2);
+	}
+
+	private void fix(int p, int r) {
+		if (this.compare(p, r) > 0) {
+			this.swap(p, r);
+		}
+	}
+
+	// The code below comes from QuickSort
+	private static final IndexedSorter alt = new HeapSort();
+
+	/**
+	 * Deepest recursion before giving up and doing a heapsort.
+	 * Returns 2 * ceil(log(n)).
+	 */
+	protected static int getMaxDepth(int x) {
+		if (x <= 0) {
+			throw new IllegalArgumentException("Undefined for " + x);
+		}
+		return (32 - Integer.numberOfLeadingZeros(x - 1)) << 2;
+	}
+
+	public void sort(int p, int r) {
+		sortInternal( p, r, getMaxDepth(r - p));
+	}
+
+	public void sort() {
+		sort(0, this.size());
+	}
+
+	private void sortInternal( int p, int r, int depth) {
+		while (true) {
+			if (r - p < 13) {
+				for (int i = p; i < r; ++i) {
+					for (int j = i; j > p && this.compare(j - 1, j) > 0; --j) {
+						this.swap(j, j - 1);
+					}
+				}
+				return;
+			}
+			if (--depth < 0) {
+				// give up
+				alt.sort( this, p, r);
+				return;
+			}
+
+			// select, move pivot into first position
+			fix( (p + r) >>> 1, p);
+			fix( (p + r) >>> 1, r - 1);
+			fix( p, r - 1);
+
+			// Divide
+			int i = p;
+			int j = r;
+			int ll = p;
+			int rr = r;
+			int cr;
+			while (true) {
+				while (++i < j) {
+					if ((cr = this.compare(i, p)) > 0) {
+						break;
+					}
+					if (0 == cr && ++ll != i) {
+						this.swap(ll, i);
+					}
+				}
+				while (--j > i) {
+					if ((cr = this.compare(p, j)) > 0) {
+						break;
+					}
+					if (0 == cr && --rr != j) {
+						this.swap(rr, j);
+					}
+				}
+				if (i < j) {
+					this.swap(i, j);
+				} else {
+					break;
+				}
+			}
+			j = i;
+			// swap pivot- and all eq values- into position
+			while (ll >= p) {
+				this.swap(ll--, --i);
+			}
+			while (rr < r) {
+				this.swap(rr++, j++);
+			}
+
+			// Conquer
+			// Recurse on smaller interval first to keep stack shallow
+			assert i != j;
+			if (i - p < r - j) {
+				sortInternal( p, i, depth);
+				p = j;
+			} else {
+				sortInternal( j, r, depth);
+				r = i;
+			}
+		}
+	}
+
+	@Override
+	public void sort(IndexedSortable indexedSortable, int i, int i1) {
+		new Exception("Not Implement");
+	}
+
+	@Override
+	public void sort(IndexedSortable indexedSortable) {
+		sort(0, this.size());
+	}
 }
 

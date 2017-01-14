@@ -42,8 +42,8 @@ public class SorterFactory {
 		);
 
 		TypeComparator[] typeComp = null;
-		if( sorterName.equals("org.example.sorter.UseLittleEndian")
-				|| ( sorterName.equals("org.example.sorter.EverythingExceptQuickSortEmbedded") && ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN ) ) {
+		if( sorterName.equals("org.example.sorter.individual.optimization.UseLittleEndian")
+				|| ( sorterName.equals("org.example.sorter.OptimizedSorter") && ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN ) ) {
 			typeComp = new TypeComparator[] {
 				new LongComparatorLittleEndian(true)
 			};

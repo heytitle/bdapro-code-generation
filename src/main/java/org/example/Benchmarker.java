@@ -49,13 +49,13 @@ public class Benchmarker {
 	public static class ThreadState {
 		@Param({
 			"org.apache.flink.runtime.operators.sort.NormalizedKeySorter",
-			"org.example.sorter.CompareUnrollLoop",
-			"org.example.sorter.SwapViaPutGetLong",
-			"org.example.sorter.FindSegmentIndexViaBitwiseOperators",
-			"org.example.sorter.EmbedQuickSortInside",
-			"org.example.sorter.UseLittleEndian",
-			"org.example.sorter.RemoveUnnecessaryBranching",
-			"org.example.sorter.EverythingExceptQuickSortEmbedded"
+			"org.example.sorter.individual.optimization.CompareUnrollLoop",
+			"org.example.sorter.individual.optimization.SwapViaPutGetLong",
+			"org.example.sorter.individual.optimization.FindSegmentIndexViaBitwiseOperators",
+			"org.example.sorter.individual.optimization.EmbedQuickSortInside",
+			"org.example.sorter.individual.optimization.UseLittleEndian",
+			"org.example.sorter.individual.optimization.RemoveUnnecessaryBranching",
+			"org.example.sorter.OptimizedSorter"
 		})
 
 		public String sorterClass;
@@ -69,7 +69,7 @@ public class Benchmarker {
 		@Setup(Level.Invocation)
 		public void writeRandomData() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 			sorter = SorterFactory.getSorter(sorterClass);
-			if( sorter.equals("org.example.sorter.EmbedQuickSortInside") ) {
+			if( sorter.equals("org.example.sorter.individual.optimization.EmbedQuickSortInside") ) {
 				quickSort = (IndexedSorter)sorter;
 			} else {
 				quickSort = new QuickSort();

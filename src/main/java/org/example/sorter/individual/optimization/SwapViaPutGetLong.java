@@ -1,4 +1,4 @@
-package org.example.sorter;
+package org.example.sorter.individual.optimization;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -25,7 +25,8 @@ import org.apache.flink.runtime.io.disk.RandomAccessInputView;
 import org.apache.flink.runtime.io.disk.SimpleCollectingOutputView;
 import org.apache.flink.runtime.io.disk.iomanager.ChannelWriterOutputView;
 import org.apache.flink.runtime.memory.ListMemorySegmentSource;
-import org.apache.flink.runtime.operators.sort.*;
+import org.apache.flink.runtime.operators.sort.InMemorySorter;
+import org.apache.flink.runtime.operators.sort.LargeRecordHandler;
 import org.apache.flink.util.MutableObjectIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class EmbedQuickSortInside<T> implements InMemorySorter<T>, IndexedSorter {
+public final class SwapViaPutGetLong<T> implements InMemorySorter<T> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(org.apache.flink.runtime.operators.sort.NormalizedKeySorter.class);
 
@@ -106,12 +107,12 @@ public final class EmbedQuickSortInside<T> implements InMemorySorter<T>, Indexed
 	// Constructors / Destructors
 	// -------------------------------------------------------------------------
 
-	public EmbedQuickSortInside(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
+	public SwapViaPutGetLong(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
 		this(serializer, comparator, memory, DEFAULT_MAX_NORMALIZED_KEY_LEN);
 	}
 
-	public EmbedQuickSortInside(TypeSerializer<T> serializer, TypeComparator<T> comparator,
-								List<MemorySegment> memory, int maxNormalizedKeyBytes)
+	public SwapViaPutGetLong(TypeSerializer<T> serializer, TypeComparator<T> comparator,
+							 List<MemorySegment> memory, int maxNormalizedKeyBytes)
 	{
 		if (serializer == null || comparator == null || memory == null) {
 			throw new NullPointerException();
@@ -375,7 +376,7 @@ public final class EmbedQuickSortInside<T> implements InMemorySorter<T>, Indexed
 		final MemorySegment segI = this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);
 
-		segI.swapBytes(this.swapBuffer, segJ, segmentOffsetI, segmentOffsetJ, this.indexEntrySize);
+		this.fastSwapBytes(segI, segJ, segmentOffsetI, segmentOffsetJ);
 	}
 
 	@Override
@@ -548,114 +549,15 @@ public final class EmbedQuickSortInside<T> implements InMemorySorter<T>, Indexed
 		}
 	}
 
-	private void fix(int p, int r) {
-		if (this.compare(p, r) > 0) {
-			this.swap(p, r);
-		}
-	}
+	public final void fastSwapBytes(MemorySegment seg1, MemorySegment seg2, int offset1, int offset2) {
+		long temp1 = seg1.getLong(offset1);
+		long temp2 = seg1.getLong(offset1+8);
 
-	// The code below comes from QuickSort
-	private static final IndexedSorter alt = new HeapSort();
+		seg1.putLong(offset1, seg2.getLong(offset2));
+		seg1.putLong(offset1+8, seg2.getLong(offset2+8));
 
-	/**
-	 * Deepest recursion before giving up and doing a heapsort.
-	 * Returns 2 * ceil(log(n)).
-	 */
-	protected static int getMaxDepth(int x) {
-		if (x <= 0) {
-			throw new IllegalArgumentException("Undefined for " + x);
-		}
-		return (32 - Integer.numberOfLeadingZeros(x - 1)) << 2;
-	}
-
-	public void sort(int p, int r) {
-		sortInternal( p, r, getMaxDepth(r - p));
-	}
-
-	public void sort() {
-		sort(0, this.size());
-	}
-
-	private void sortInternal( int p, int r, int depth) {
-		while (true) {
-			if (r - p < 13) {
-				for (int i = p; i < r; ++i) {
-					for (int j = i; j > p && this.compare(j - 1, j) > 0; --j) {
-						this.swap(j, j - 1);
-					}
-				}
-				return;
-			}
-			if (--depth < 0) {
-				// give up
-				alt.sort( this, p, r);
-				return;
-			}
-
-			// select, move pivot into first position
-			fix( (p + r) >>> 1, p);
-			fix( (p + r) >>> 1, r - 1);
-			fix( p, r - 1);
-
-			// Divide
-			int i = p;
-			int j = r;
-			int ll = p;
-			int rr = r;
-			int cr;
-			while (true) {
-				while (++i < j) {
-					if ((cr = this.compare(i, p)) > 0) {
-						break;
-					}
-					if (0 == cr && ++ll != i) {
-						this.swap(ll, i);
-					}
-				}
-				while (--j > i) {
-					if ((cr = this.compare(p, j)) > 0) {
-						break;
-					}
-					if (0 == cr && --rr != j) {
-						this.swap(rr, j);
-					}
-				}
-				if (i < j) {
-					this.swap(i, j);
-				} else {
-					break;
-				}
-			}
-			j = i;
-			// swap pivot- and all eq values- into position
-			while (ll >= p) {
-				this.swap(ll--, --i);
-			}
-			while (rr < r) {
-				this.swap(rr++, j++);
-			}
-
-			// Conquer
-			// Recurse on smaller interval first to keep stack shallow
-			assert i != j;
-			if (i - p < r - j) {
-				sortInternal( p, i, depth);
-				p = j;
-			} else {
-				sortInternal( j, r, depth);
-				r = i;
-			}
-		}
-	}
-
-	@Override
-	public void sort(IndexedSortable indexedSortable, int i, int i1) {
-		new Exception("Not Implement");
-	}
-
-	@Override
-	public void sort(IndexedSortable indexedSortable) {
-		sort(0, this.size());
+		seg2.putLong(offset2, temp1);
+		seg2.putLong(offset2+8, temp2);
 	}
 }
 

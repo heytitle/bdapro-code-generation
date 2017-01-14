@@ -8,7 +8,6 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.IndexedSorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
-import org.example.sorter.EmbedQuickSortInside;
 import org.example.utils.SorterFactory;
 import org.example.utils.Validator;
 import org.example.utils.generator.RandomTuple2LongInt;
@@ -31,13 +30,13 @@ public class SortTest extends TestCase {
 
 		String[] sorters = new String[]{
 			"org.example.MySorter",
-			"org.example.sorter.CompareUnrollLoop",
-			"org.example.sorter.SwapViaPutGetLong",
-			"org.example.sorter.FindSegmentIndexViaBitwiseOperators",
-			"org.example.sorter.EmbedQuickSortInside",
-			"org.example.sorter.UseLittleEndian",
-			"org.example.sorter.RemoveUnnecessaryBranching",
-			"org.example.sorter.EverythingExceptQuickSortEmbedded"
+			"org.example.sorter.individual.optimization.CompareUnrollLoop",
+			"org.example.sorter.individual.optimization.SwapViaPutGetLong",
+			"org.example.sorter.individual.optimization.FindSegmentIndexViaBitwiseOperators",
+			"org.example.sorter.individual.optimization.EmbedQuickSortInside",
+			"org.example.sorter.individual.optimization.UseLittleEndian",
+			"org.example.sorter.individual.optimization.RemoveUnnecessaryBranching",
+			"org.example.sorter.OptimizedSorter"
 		};
 
 		for ( String sorterName: sorters ) {
@@ -48,7 +47,9 @@ public class SortTest extends TestCase {
 
 				fillRandomData(sorter, seed, i );
 
-				if( sorterName.equals("org.example.sorter.EmbedQuickSortInside") ) {
+				if( sorterName.equals("org.example.sorter.individual.optimization.EmbedQuickSortInside")
+					|| sorterName.equals("org.example.sorter.OptimizedSorter")
+				) {
 					((IndexedSorter)sorter).sort(sorter);
 				} else {
 					qs.sort(sorter);

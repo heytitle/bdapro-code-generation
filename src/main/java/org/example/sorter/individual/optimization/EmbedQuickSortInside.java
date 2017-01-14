@@ -1,4 +1,4 @@
-package org.example.sorter;
+package org.example.sorter.individual.optimization;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -25,8 +25,7 @@ import org.apache.flink.runtime.io.disk.RandomAccessInputView;
 import org.apache.flink.runtime.io.disk.SimpleCollectingOutputView;
 import org.apache.flink.runtime.io.disk.iomanager.ChannelWriterOutputView;
 import org.apache.flink.runtime.memory.ListMemorySegmentSource;
-import org.apache.flink.runtime.operators.sort.InMemorySorter;
-import org.apache.flink.runtime.operators.sort.LargeRecordHandler;
+import org.apache.flink.runtime.operators.sort.*;
 import org.apache.flink.util.MutableObjectIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class RemoveUnnecessaryBranching<T> implements InMemorySorter<T> {
+public final class EmbedQuickSortInside<T> implements InMemorySorter<T>, IndexedSorter {
 
 	private static final Logger LOG = LoggerFactory.getLogger(org.apache.flink.runtime.operators.sort.NormalizedKeySorter.class);
 
@@ -102,18 +101,17 @@ public final class RemoveUnnecessaryBranching<T> implements InMemorySorter<T> {
 
 	private final boolean useNormKeyUninverted;
 
-	private final int comparePrefix;
 
 	// -------------------------------------------------------------------------
 	// Constructors / Destructors
 	// -------------------------------------------------------------------------
 
-	public RemoveUnnecessaryBranching(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
+	public EmbedQuickSortInside(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
 		this(serializer, comparator, memory, DEFAULT_MAX_NORMALIZED_KEY_LEN);
 	}
 
-	public RemoveUnnecessaryBranching(TypeSerializer<T> serializer, TypeComparator<T> comparator,
-									  List<MemorySegment> memory, int maxNormalizedKeyBytes)
+	public EmbedQuickSortInside(TypeSerializer<T> serializer, TypeComparator<T> comparator,
+								List<MemorySegment> memory, int maxNormalizedKeyBytes)
 	{
 		if (serializer == null || comparator == null || memory == null) {
 			throw new NullPointerException();
@@ -124,13 +122,6 @@ public final class RemoveUnnecessaryBranching<T> implements InMemorySorter<T> {
 
 		this.serializer = serializer;
 		this.comparator = comparator;
-
-		if( comparator.invertNormalizedKey() ) {
-			this.comparePrefix = -1;
-		} else {
-			this.comparePrefix = 1;
-		}
-
 		this.useNormKeyUninverted = !comparator.invertNormalizedKey();
 
 		// check the size of the first buffer and record it. all further buffers must have the same size.
@@ -363,7 +354,14 @@ public final class RemoveUnnecessaryBranching<T> implements InMemorySorter<T> {
 
 		int val = segI.compare(segJ, segmentOffsetI + OFFSET_LEN, segmentOffsetJ + OFFSET_LEN, this.numKeyBytes);
 
-		return this.useNormKeyUninverted ? val : -val;
+		if (val != 0 || this.normalizedKeyFullyDetermines) {
+			return this.useNormKeyUninverted ? val : -val;
+		}
+
+		final long pointerI = segI.getLong(segmentOffsetI) & POINTER_MASK;
+		final long pointerJ = segJ.getLong(segmentOffsetJ) & POINTER_MASK;
+
+		return compareRecords(pointerI, pointerJ);
 	}
 
 	@Override
@@ -548,6 +546,116 @@ public final class RemoveUnnecessaryBranching<T> implements InMemorySorter<T> {
 			}
 			offset = 0;
 		}
+	}
+
+	private void fix(int p, int r) {
+		if (this.compare(p, r) > 0) {
+			this.swap(p, r);
+		}
+	}
+
+	// The code below comes from QuickSort
+	private static final IndexedSorter alt = new HeapSort();
+
+	/**
+	 * Deepest recursion before giving up and doing a heapsort.
+	 * Returns 2 * ceil(log(n)).
+	 */
+	protected static int getMaxDepth(int x) {
+		if (x <= 0) {
+			throw new IllegalArgumentException("Undefined for " + x);
+		}
+		return (32 - Integer.numberOfLeadingZeros(x - 1)) << 2;
+	}
+
+	public void sort(int p, int r) {
+		sortInternal( p, r, getMaxDepth(r - p));
+	}
+
+	public void sort() {
+		sort(0, this.size());
+	}
+
+	private void sortInternal( int p, int r, int depth) {
+		while (true) {
+			if (r - p < 13) {
+				for (int i = p; i < r; ++i) {
+					for (int j = i; j > p && this.compare(j - 1, j) > 0; --j) {
+						this.swap(j, j - 1);
+					}
+				}
+				return;
+			}
+			if (--depth < 0) {
+				// give up
+				alt.sort( this, p, r);
+				return;
+			}
+
+			// select, move pivot into first position
+			fix( (p + r) >>> 1, p);
+			fix( (p + r) >>> 1, r - 1);
+			fix( p, r - 1);
+
+			// Divide
+			int i = p;
+			int j = r;
+			int ll = p;
+			int rr = r;
+			int cr;
+			while (true) {
+				while (++i < j) {
+					if ((cr = this.compare(i, p)) > 0) {
+						break;
+					}
+					if (0 == cr && ++ll != i) {
+						this.swap(ll, i);
+					}
+				}
+				while (--j > i) {
+					if ((cr = this.compare(p, j)) > 0) {
+						break;
+					}
+					if (0 == cr && --rr != j) {
+						this.swap(rr, j);
+					}
+				}
+				if (i < j) {
+					this.swap(i, j);
+				} else {
+					break;
+				}
+			}
+			j = i;
+			// swap pivot- and all eq values- into position
+			while (ll >= p) {
+				this.swap(ll--, --i);
+			}
+			while (rr < r) {
+				this.swap(rr++, j++);
+			}
+
+			// Conquer
+			// Recurse on smaller interval first to keep stack shallow
+			assert i != j;
+			if (i - p < r - j) {
+				sortInternal( p, i, depth);
+				p = j;
+			} else {
+				sortInternal( j, r, depth);
+				r = i;
+			}
+		}
+	}
+
+	@Override
+	public void sort(IndexedSortable indexedSortable, int i, int i1) {
+		new Exception("Not Implement");
+	}
+
+	@Override
+	public void sort(IndexedSortable indexedSortable) {
+		sort(0, this.size());
 	}
 }
 
