@@ -58,7 +58,7 @@ public final class LongComparatorLittleEndian extends BasicTypeComparator<Long> 
 			}
 		}
 		else {
-			target.putLongLittleEndian(offset, value);
+			target.putLong(offset, value);
 			for (int i = 8; i < numBytes; i++) {
 				target.put(offset + i, (byte) 0);
 			}
