@@ -1,14 +1,16 @@
-package org.example;
+package org.evaluation;
 
 import org.apache.commons.collections.BufferOverflowException;
 import org.apache.flink.api.java.tuple.Tuple2;
 
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
-import org.example.utils.Log;
-import org.example.utils.SorterFactory;
-import org.example.utils.Validator;
-import org.example.utils.generator.RandomTuple2LongInt;
+import org.code.generation.SorterCodeGenerator;
+import org.code.generation.template.configuration.SorterModel;
+import org.evaluation.utils.Log;
+import org.evaluation.utils.SorterFactory;
+import org.evaluation.utils.Validator;
+import org.evaluation.utils.generator.RandomTuple2LongInt;
 
 
 import java.io.BufferedReader;
@@ -34,9 +36,13 @@ public class SimpleApp {
 
 
 
-		InMemorySorter sorter = null;
+//		InMemorySorter sorter = null;
+//
+//		sorter  = SorterFactory.getSorter(sorterClass);
 
-		sorter  = SorterFactory.getSorter(sorterClass);
+		SorterCodeGenerator factory = new SorterCodeGenerator();
+		InMemorySorter sorter = factory.createSorter( new SorterModel(true) );
+
 		fillRandomData(sorter);
 
 		QuickSort qs = new QuickSort();

@@ -1,4 +1,4 @@
-package org.example;
+package org.evaluation;
 
 /**
  * Created by heytitle on 12/4/16.
@@ -22,7 +22,7 @@ import org.apache.flink.runtime.memory.ListMemorySegmentSource;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.LargeRecordHandler;
 import org.apache.flink.util.MutableObjectIterator;
-import org.example.utils.Log;
+import org.evaluation.utils.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

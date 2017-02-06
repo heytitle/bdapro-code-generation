@@ -1,4 +1,4 @@
-package org.example.sorter.individual.optimization;
+package org.evaluation.sorter.individual.optimization;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,16 +27,18 @@ import org.apache.flink.runtime.io.disk.iomanager.ChannelWriterOutputView;
 import org.apache.flink.runtime.memory.ListMemorySegmentSource;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.LargeRecordHandler;
+import org.apache.flink.shaded.com.google.common.math.LongMath;
 import org.apache.flink.util.MutableObjectIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class CompareUnrollLoop<T> implements InMemorySorter<T> {
+public final class FindSegmentIndexViaBitwiseOperators<T> implements InMemorySorter<T> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(org.apache.flink.runtime.operators.sort.NormalizedKeySorter.class);
 
@@ -102,17 +104,19 @@ public final class CompareUnrollLoop<T> implements InMemorySorter<T> {
 
 	private final boolean useNormKeyUninverted;
 
+	private final int shiftBitsIndexEntriesPerSegment;
+
 
 	// -------------------------------------------------------------------------
 	// Constructors / Destructors
 	// -------------------------------------------------------------------------
 
-	public CompareUnrollLoop(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
+	public FindSegmentIndexViaBitwiseOperators(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
 		this(serializer, comparator, memory, DEFAULT_MAX_NORMALIZED_KEY_LEN);
 	}
 
-	public CompareUnrollLoop(TypeSerializer<T> serializer, TypeComparator<T> comparator,
-							 List<MemorySegment> memory, int maxNormalizedKeyBytes)
+	public FindSegmentIndexViaBitwiseOperators(TypeSerializer<T> serializer, TypeComparator<T> comparator,
+											   List<MemorySegment> memory, int maxNormalizedKeyBytes)
 	{
 		if (serializer == null || comparator == null || memory == null) {
 			throw new NullPointerException();
@@ -173,6 +177,8 @@ public final class CompareUnrollLoop<T> implements InMemorySorter<T> {
 		// set to initial state
 		this.currentSortIndexSegment = nextMemorySegment();
 		this.sortIndex.add(this.currentSortIndexSegment);
+
+		this.shiftBitsIndexEntriesPerSegment = LongMath.log2(this.indexEntriesPerSegment, RoundingMode.UNNECESSARY);
 	}
 
 	// -------------------------------------------------------------------------
@@ -344,16 +350,21 @@ public final class CompareUnrollLoop<T> implements InMemorySorter<T> {
 
 	@Override
 	public int compare(int i, int j) {
-		final int bufferNumI = i / this.indexEntriesPerSegment;
-		final int segmentOffsetI = (i % this.indexEntriesPerSegment) * this.indexEntrySize;
+//		final int bufferNumI = i >> this.shiftBitsIndexEntriesPerSegment;
+//		final int segmentOffsetI = (i & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
+//
+//		final int bufferNumJ = j >> this.shiftBitsIndexEntriesPerSegment;
+//		final int segmentOffsetJ = (j & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
+		final int bufferNumI = i / 32768;
+		final int segmentOffsetI = (i % 32768) * this.indexEntrySize;
 
-		final int bufferNumJ = j / this.indexEntriesPerSegment;
-		final int segmentOffsetJ = (j % this.indexEntriesPerSegment) * this.indexEntrySize;
+		final int bufferNumJ = j / 32768;
+		final int segmentOffsetJ = (j % 32768) * this.indexEntrySize;
 
 		final MemorySegment segI = this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);
 
-		int val = this.fastCompare(segI, segJ, segmentOffsetI + OFFSET_LEN, segmentOffsetJ + OFFSET_LEN);
+		int val = segI.compare(segJ, segmentOffsetI + OFFSET_LEN, segmentOffsetJ + OFFSET_LEN, this.numKeyBytes);
 
 		if (val != 0 || this.normalizedKeyFullyDetermines) {
 			return this.useNormKeyUninverted ? val : -val;
@@ -367,11 +378,16 @@ public final class CompareUnrollLoop<T> implements InMemorySorter<T> {
 
 	@Override
 	public void swap(int i, int j) {
-		final int bufferNumI = i / this.indexEntriesPerSegment;
-		final int segmentOffsetI = (i % this.indexEntriesPerSegment) * this.indexEntrySize;
+		final int bufferNumI = i / 32768;
+		final int segmentOffsetI = (i % 32768) * this.indexEntrySize;
 
-		final int bufferNumJ = j / this.indexEntriesPerSegment;
-		final int segmentOffsetJ = (j % this.indexEntriesPerSegment) * this.indexEntrySize;
+		final int bufferNumJ = j / 32768;
+		final int segmentOffsetJ = (j % 32768) * this.indexEntrySize;
+//		final int bufferNumI = i >> this.shiftBitsIndexEntriesPerSegment;
+//		final int segmentOffsetI = (i & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
+//
+//		final int bufferNumJ = j >> this.shiftBitsIndexEntriesPerSegment;
+//		final int segmentOffsetJ = (j & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
 
 		final MemorySegment segI = this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);
@@ -547,18 +563,6 @@ public final class CompareUnrollLoop<T> implements InMemorySorter<T> {
 			}
 			offset = 0;
 		}
-	}
-
-	public final int fastCompare(MemorySegment seg1, MemorySegment seg2, int offset1, int offset2) {
-
-		long l1 = seg1.getLongBigEndian(offset1);
-		long l2 = seg2.getLongBigEndian(offset2);
-
-		if(l1 != l2) {
-			return l1 < l2 ^ l1 < 0L ^ l2 < 0L? -1 : 1 ;
-		}
-
-		return 0;
 	}
 }
 

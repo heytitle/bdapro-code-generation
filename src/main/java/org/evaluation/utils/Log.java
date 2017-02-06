@@ -1,4 +1,4 @@
-package org.example.utils;
+package org.evaluation.utils;
 
 /**
  * Created by heytitle on 12/4/16.

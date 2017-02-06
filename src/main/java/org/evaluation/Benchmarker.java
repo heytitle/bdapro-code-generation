@@ -1,14 +1,13 @@
-package org.example;
+package org.evaluation;
 
-import com.esotericsoftware.kryo.Kryo;
 import org.apache.commons.collections.BufferOverflowException;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.IndexedSorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
 import org.apache.flink.util.MutableObjectIterator;
-import org.example.utils.SorterFactory;
-import org.example.utils.generator.RandomTuple2LongInt;
+import org.evaluation.utils.SorterFactory;
+import org.evaluation.utils.generator.RandomTuple2LongInt;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -17,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 
 //import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.*;
-import scala.util.Random;
 //import org.openjdk.jmh.annotations.Scope;
 //import org.openjdk.jmh.annotations.State;
 //import org.openjdk.jmh.annotations.Warmup;
@@ -48,14 +46,14 @@ public class Benchmarker {
 	@State(Scope.Thread)
 	public static class ThreadState {
 		@Param({
-			"org.apache.flink.runtime.operators.sort.NormalizedKeySorter",
-			"org.example.sorter.individual.optimization.CompareUnrollLoop",
-			"org.example.sorter.individual.optimization.SwapViaPutGetLong",
-			"org.example.sorter.individual.optimization.FindSegmentIndexViaBitwiseOperators",
-			"org.example.sorter.individual.optimization.EmbedQuickSortInside",
-			"org.example.sorter.individual.optimization.UseLittleEndian",
-			"org.example.sorter.individual.optimization.RemoveUnnecessaryBranching",
-			"org.example.sorter.OptimizedSorter"
+//			"org.apache.flink.runtime.operators.sort.NormalizedKeySorter",
+//			"org.evaluation.sorter.individual.optimization.CompareUnrollLoop",
+//			"org.evaluation.sorter.individual.optimization.SwapViaPutGetLong",
+			"org.evaluation.sorter.individual.optimization.FindSegmentIndexViaBitwiseOperators"
+//			"org.evaluation.sorter.individual.optimization.EmbedQuickSortInside",
+//			"org.evaluation.sorter.individual.optimization.UseLittleEndian",
+//			"org.evaluation.sorter.individual.optimization.RemoveUnnecessaryBranching",
+//			"org.evaluation.sorter.OptimizedSorter"
 		})
 
 		public String sorterClass;

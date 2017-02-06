@@ -1,4 +1,4 @@
-package org.example.sorter.individual.optimization;
+package org.evaluation.sorter.individual.optimization;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

@@ -70,6 +70,18 @@
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>2.3.20</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>janino</artifactId>
+			<version>2.7.5</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -124,7 +136,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>org.example.SimpleApp</mainClass>
+							<mainClass>org.evaluation.SimpleApp</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>

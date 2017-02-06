@@ -1,4 +1,4 @@
-package org.example.utils;
+package org.evaluation.utils;
 
 /**
  * Created by heytitle on 11/28/16.
@@ -16,7 +16,7 @@ import org.apache.flink.api.java.typeutils.runtime.TupleSerializer;
 import org.apache.flink.core.memory.MemorySegment;
 import org.apache.flink.core.memory.MemorySegmentFactory;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
-import org.example.Configuration;
+import org.evaluation.Configuration;
 import org.apache.flink.core.memory.MyMemorySegment;
 import org.org.apache.flink.api.common.typeutils.base.LongComparatorLittleEndian;
 
@@ -42,8 +42,8 @@ public class SorterFactory {
 		);
 
 		TypeComparator[] typeComp = null;
-		if( sorterName.equals("org.example.sorter.individual.optimization.UseLittleEndian")
-				|| ( sorterName.equals("org.example.sorter.OptimizedSorter") && ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN ) ) {
+		if( sorterName.equals("org.evaluation.sorter.individual.optimization.UseLittleEndian")
+				|| ( sorterName.equals("org.evaluation.sorter.OptimizedSorter") && ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN ) ) {
 			typeComp = new TypeComparator[] {
 				new LongComparatorLittleEndian(true)
 			};
@@ -74,7 +74,7 @@ public class SorterFactory {
 		return  sorter;
 	}
 
-	private static List<MemorySegment> getMemory(String sorterName) {
+	public static List<MemorySegment> getMemory(String sorterName) {
 		ArrayList<MemorySegment> list = new ArrayList<MemorySegment>(Configuration.numSegments);
 		for (int i = 0; i < Configuration.numSegments; i++) {
 			MemorySegment mem = null;
