@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/heytitle/bdapro-code-generation.svg?branch=master)](https://travis-ci.org/heytitle/bdapro-code-generation)
+[![Build Status](https://travis-ci.org/heytitle/flink-sorter-performance-evaluation.svg?branch=master)](https://travis-ci.org/heytitle/flink-sorter-performance-evaluation)
 
 ## Build test app
 ```
