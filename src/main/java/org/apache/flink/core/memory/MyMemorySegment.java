@@ -1,6 +1,6 @@
 package org.apache.flink.core.memory;
 
-import org.example.utils.Log;
+import org.evaluation.utils.Log;
 
 import java.io.DataInput;
 import java.io.DataOutput;

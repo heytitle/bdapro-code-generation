@@ -5,8 +5,6 @@ import org.apache.flink.api.java.tuple.Tuple2;
 
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
-import org.code.generation.SorterCodeGenerator;
-import org.code.generation.template.configuration.SorterModel;
 import org.evaluation.utils.Log;
 import org.evaluation.utils.SorterFactory;
 import org.evaluation.utils.Validator;
@@ -35,13 +33,9 @@ public class SimpleApp {
 		Log.debug("Instantiate sorter : " + sorterClass );
 
 
+		InMemorySorter sorter = null;
 
-//		InMemorySorter sorter = null;
-//
-//		sorter  = SorterFactory.getSorter(sorterClass);
-
-		SorterCodeGenerator factory = new SorterCodeGenerator();
-		InMemorySorter sorter = factory.createSorter( new SorterModel(true) );
+		sorter  = SorterFactory.getSorter(sorterClass);
 
 		fillRandomData(sorter);
 

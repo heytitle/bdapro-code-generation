@@ -8,9 +8,9 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.runtime.operators.sort.InMemorySorter;
 import org.apache.flink.runtime.operators.sort.IndexedSorter;
 import org.apache.flink.runtime.operators.sort.QuickSort;
-import org.example.utils.SorterFactory;
-import org.example.utils.Validator;
-import org.example.utils.generator.RandomTuple2LongInt;
+import org.evaluation.utils.SorterFactory;
+import org.evaluation.utils.Validator;
+import org.evaluation.utils.generator.RandomTuple2LongInt;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -29,14 +29,14 @@ public class SortTest extends TestCase {
 		int[] noRecords = new int[]{1000, 1000000};
 
 		String[] sorters = new String[]{
-			"org.example.MySorter",
-			"org.example.sorter.individual.optimization.CompareUnrollLoop",
-			"org.example.sorter.individual.optimization.SwapViaPutGetLong",
-			"org.example.sorter.individual.optimization.FindSegmentIndexViaBitwiseOperators",
-			"org.example.sorter.individual.optimization.EmbedQuickSortInside",
-			"org.example.sorter.individual.optimization.UseLittleEndian",
-			"org.example.sorter.individual.optimization.RemoveUnnecessaryBranching",
-			"org.example.sorter.OptimizedSorter"
+			"org.evaluation.sorter.individual.optimization.CompareUnrollLoop",
+			"org.evaluation.sorter.individual.optimization.SwapViaPutGetLong",
+			"org.evaluation.sorter.individual.optimization.FindSegmentIndexViaBitwiseOperators",
+			"org.evaluation.sorter.individual.optimization.EmbedQuickSortInside",
+			"org.evaluation.sorter.individual.optimization.UseLittleEndian",
+			"org.evaluation.sorter.individual.optimization.RemoveUnnecessaryBranching",
+			"org.evaluation.sorter.OptimizedSorter",
+			"org.evaluation.sorter.individual.optimization.DividedByConstant",
 		};
 
 		for ( String sorterName: sorters ) {
@@ -55,7 +55,6 @@ public class SortTest extends TestCase {
 					qs.sort(sorter);
 				}
 
-
 				boolean isSorted = Validator.isSorted(sorter.getIterator());
 
 				assertTrue("Data is sorted property: seed " + seed + " , no. records " + i, isSorted);
@@ -70,7 +69,7 @@ public class SortTest extends TestCase {
 	public static void fillRandomData(InMemorySorter sorter, int seed, int noRecords) throws IOException {
 		RandomTuple2LongInt generator = new RandomTuple2LongInt(seed);
 
-		Tuple2<Long,Integer> record = new Tuple2<Long,Integer>();
+		Tuple2<Long,Integer> record = new Tuple2<Long, Integer>();
 		int num = 0;
 
 		while (num < noRecords){

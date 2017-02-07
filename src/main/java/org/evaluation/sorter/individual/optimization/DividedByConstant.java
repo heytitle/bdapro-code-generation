@@ -38,7 +38,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class FindSegmentIndexViaBitwiseOperators<T> implements InMemorySorter<T> {
+public final class DividedByConstant<T> implements InMemorySorter<T> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(org.apache.flink.runtime.operators.sort.NormalizedKeySorter.class);
 
@@ -111,12 +111,12 @@ public final class FindSegmentIndexViaBitwiseOperators<T> implements InMemorySor
 	// Constructors / Destructors
 	// -------------------------------------------------------------------------
 
-	public FindSegmentIndexViaBitwiseOperators(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
+	public DividedByConstant(TypeSerializer<T> serializer, TypeComparator<T> comparator, List<MemorySegment> memory) {
 		this(serializer, comparator, memory, DEFAULT_MAX_NORMALIZED_KEY_LEN);
 	}
 
-	public FindSegmentIndexViaBitwiseOperators(TypeSerializer<T> serializer, TypeComparator<T> comparator,
-											   List<MemorySegment> memory, int maxNormalizedKeyBytes)
+	public DividedByConstant(TypeSerializer<T> serializer, TypeComparator<T> comparator,
+							 List<MemorySegment> memory, int maxNormalizedKeyBytes)
 	{
 		if (serializer == null || comparator == null || memory == null) {
 			throw new NullPointerException();
@@ -350,11 +350,11 @@ public final class FindSegmentIndexViaBitwiseOperators<T> implements InMemorySor
 
 	@Override
 	public int compare(int i, int j) {
-		final int bufferNumI = i >> this.shiftBitsIndexEntriesPerSegment;
-		final int segmentOffsetI = (i & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
+		final int bufferNumI = i / 32768;
+		final int segmentOffsetI = (i % 32768) * this.indexEntrySize;
 
-		final int bufferNumJ = j >> this.shiftBitsIndexEntriesPerSegment;
-		final int segmentOffsetJ = (j & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
+		final int bufferNumJ = j / 32768;
+		final int segmentOffsetJ = (j % 32768) * this.indexEntrySize;
 
 		final MemorySegment segI = this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);
@@ -373,11 +373,11 @@ public final class FindSegmentIndexViaBitwiseOperators<T> implements InMemorySor
 
 	@Override
 	public void swap(int i, int j) {
-		final int bufferNumI = i >> this.shiftBitsIndexEntriesPerSegment;
-		final int segmentOffsetI = (i & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
+		final int bufferNumI = i / 32768;
+		final int segmentOffsetI = (i % 32768) * this.indexEntrySize;
 
-		final int bufferNumJ = j >> this.shiftBitsIndexEntriesPerSegment;
-		final int segmentOffsetJ = (j & (this.indexEntriesPerSegment-1) ) * this.indexEntrySize;
+		final int bufferNumJ = j / 32768;
+		final int segmentOffsetJ = (j % 32768) * this.indexEntrySize;
 
 		final MemorySegment segI = this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);

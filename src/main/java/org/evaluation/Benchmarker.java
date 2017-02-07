@@ -46,14 +46,15 @@ public class Benchmarker {
 	@State(Scope.Thread)
 	public static class ThreadState {
 		@Param({
-//			"org.apache.flink.runtime.operators.sort.NormalizedKeySorter",
-//			"org.evaluation.sorter.individual.optimization.CompareUnrollLoop",
-//			"org.evaluation.sorter.individual.optimization.SwapViaPutGetLong",
-			"org.evaluation.sorter.individual.optimization.FindSegmentIndexViaBitwiseOperators"
-//			"org.evaluation.sorter.individual.optimization.EmbedQuickSortInside",
-//			"org.evaluation.sorter.individual.optimization.UseLittleEndian",
-//			"org.evaluation.sorter.individual.optimization.RemoveUnnecessaryBranching",
-//			"org.evaluation.sorter.OptimizedSorter"
+			"org.apache.flink.runtime.operators.sort.NormalizedKeySorter",
+			"org.evaluation.sorter.individual.optimization.CompareUnrollLoop",
+			"org.evaluation.sorter.individual.optimization.SwapViaPutGetLong",
+			"org.evaluation.sorter.individual.optimization.FindSegmentIndexViaBitwiseOperators",
+			"org.evaluation.sorter.individual.optimization.EmbedQuickSortInside",
+			"org.evaluation.sorter.individual.optimization.UseLittleEndian",
+			"org.evaluation.sorter.individual.optimization.RemoveUnnecessaryBranching",
+			"org.evaluation.sorter.OptimizedSorter",
+			"org.evaluation.sorter.individual.optimization.DividedByConstant"
 		})
 
 		public String sorterClass;
