@@ -182,6 +182,10 @@
 				<plugin>
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>2.17</version>
+					<configuration>
+						<!-- Travis build workaround -->
+						<argLine>-Xms1024m -Xmx2048m</argLine>
+					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
