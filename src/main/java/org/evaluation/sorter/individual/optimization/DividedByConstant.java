@@ -104,8 +104,6 @@ public final class DividedByConstant<T> implements InMemorySorter<T> {
 
 	private final boolean useNormKeyUninverted;
 
-	private final int shiftBitsIndexEntriesPerSegment;
-
 
 	// -------------------------------------------------------------------------
 	// Constructors / Destructors
@@ -178,7 +176,6 @@ public final class DividedByConstant<T> implements InMemorySorter<T> {
 		this.currentSortIndexSegment = nextMemorySegment();
 		this.sortIndex.add(this.currentSortIndexSegment);
 
-		this.shiftBitsIndexEntriesPerSegment = LongMath.log2(this.indexEntriesPerSegment, RoundingMode.UNNECESSARY);
 	}
 
 	// -------------------------------------------------------------------------
@@ -350,11 +347,11 @@ public final class DividedByConstant<T> implements InMemorySorter<T> {
 
 	@Override
 	public int compare(int i, int j) {
-		final int bufferNumI = i / 32768;
-		final int segmentOffsetI = (i % 32768) * this.indexEntrySize;
+		final int bufferNumI = i / 43690;
+		final int segmentOffsetI = (i % 43690) * this.indexEntrySize;
 
-		final int bufferNumJ = j / 32768;
-		final int segmentOffsetJ = (j % 32768) * this.indexEntrySize;
+		final int bufferNumJ = j / 43690;
+		final int segmentOffsetJ = (j % 43690) * this.indexEntrySize;
 
 		final MemorySegment segI = this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);
@@ -373,11 +370,11 @@ public final class DividedByConstant<T> implements InMemorySorter<T> {
 
 	@Override
 	public void swap(int i, int j) {
-		final int bufferNumI = i / 32768;
-		final int segmentOffsetI = (i % 32768) * this.indexEntrySize;
+		final int bufferNumI = i / 43690;
+		final int segmentOffsetI = (i % 43690) * this.indexEntrySize;
 
-		final int bufferNumJ = j / 32768;
-		final int segmentOffsetJ = (j % 32768) * this.indexEntrySize;
+		final int bufferNumJ = j / 43690;
+		final int segmentOffsetJ = (j % 43690) * this.indexEntrySize;
 
 		final MemorySegment segI = this.sortIndex.get(bufferNumI);
 		final MemorySegment segJ = this.sortIndex.get(bufferNumJ);

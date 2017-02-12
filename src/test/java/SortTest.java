@@ -29,14 +29,7 @@ public class SortTest extends TestCase {
 		int[] noRecords = new int[]{1000, 1000000};
 
 		String[] sorters = new String[]{
-			"org.evaluation.sorter.individual.optimization.CompareUnrollLoop",
-			"org.evaluation.sorter.individual.optimization.SwapViaPutGetLong",
-			"org.evaluation.sorter.individual.optimization.FindSegmentIndexViaBitwiseOperators",
-			"org.evaluation.sorter.individual.optimization.EmbedQuickSortInside",
-			"org.evaluation.sorter.individual.optimization.UseLittleEndian",
-			"org.evaluation.sorter.individual.optimization.RemoveUnnecessaryBranching",
-			"org.evaluation.sorter.OptimizedSorter",
-			"org.evaluation.sorter.individual.optimization.DividedByConstant",
+			"org.evaluation.sorter.individual.optimization.DividedByConstant"
 		};
 
 		for ( String sorterName: sorters ) {
@@ -66,10 +59,40 @@ public class SortTest extends TestCase {
 
 	}
 
+	@Test
+	public  void testFlink3722() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+		int[] noRecords = new int[]{1000, 1000000};
+
+		String[] sorters = new String[]{
+			"org.flink3722.NormalizedKeySorter",
+		};
+
+		org.flink3722.QuickSort qqs = new org.flink3722.QuickSort();
+
+		for ( String sorterName: sorters ) {
+			System.out.println("Testing  " + sorterName );
+			for( int i : noRecords ) {
+				int seed = new Random().nextInt();
+				InMemorySorter sorter = SorterFactory.getSorter(sorterName);
+
+				fillRandomData(sorter, seed, i );
+
+				qqs.sort(sorter);
+
+				boolean isSorted = Validator.isSorted(sorter.getIterator());
+
+				assertTrue("Data is sorted property: seed " + seed + " , no. records " + i, isSorted);
+			}
+		}
+
+
+
+	}
+
 	public static void fillRandomData(InMemorySorter sorter, int seed, int noRecords) throws IOException {
 		RandomTuple2LongInt generator = new RandomTuple2LongInt(seed);
 
-		Tuple2<Long,Integer> record = new Tuple2<Long, Integer>();
+		Tuple2<Integer,Integer> record = new Tuple2<Integer,Integer>();
 		int num = 0;
 
 		while (num < noRecords){

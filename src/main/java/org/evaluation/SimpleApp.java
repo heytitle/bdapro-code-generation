@@ -64,7 +64,7 @@ public class SimpleApp {
 	public static void fillRandomData(InMemorySorter sorter) throws IOException {
 		RandomTuple2LongInt generator = new RandomTuple2LongInt(Configuration.SEED);
 
-		Tuple2<Long,Integer> record = new Tuple2<Long,Integer>();
+		Tuple2<Integer,Integer> record = new Tuple2<Integer, Integer>();
 		int num = 0;
 
 		Log.debug("Randomly generating " + Configuration.NUM_RECORDS + " records");

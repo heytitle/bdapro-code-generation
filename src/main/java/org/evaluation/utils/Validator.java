@@ -10,15 +10,15 @@ import java.io.IOException;
  */
 public class Validator {
 
-	public static boolean isSorted(MutableObjectIterator<Tuple2<Long,Integer>> iter) throws IOException {
+	public static boolean isSorted(MutableObjectIterator<Tuple2<Integer,Integer>> iter) throws IOException {
 
-		Tuple2<Long,Integer> readTarget = new Tuple2<Long,Integer>();
+		Tuple2<Integer,Integer> readTarget = new Tuple2<Integer,Integer>();
 
 		iter.next(readTarget);
 
 		int num = 0;
-		Long prev = null;
-		Long current;
+		Integer prev = null;
+		Integer current;
 
 		boolean isSorted = true;
 

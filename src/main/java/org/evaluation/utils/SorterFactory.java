@@ -6,6 +6,7 @@ package org.evaluation.utils;
 
 import org.apache.flink.api.common.typeutils.TypeComparator;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
+import org.apache.flink.api.common.typeutils.base.IntComparator;
 import org.apache.flink.api.common.typeutils.base.IntSerializer;
 import org.apache.flink.api.common.typeutils.base.LongComparator;
 import org.apache.flink.api.common.typeutils.base.LongSerializer;
@@ -32,12 +33,12 @@ public class SorterFactory {
 	public static InMemorySorter getSorter( String sorterName ) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
 		TypeSerializer[] insideSerializers = new TypeSerializer[] {
-			LongSerializer.INSTANCE,
+			IntSerializer.INSTANCE,
 			IntSerializer.INSTANCE
 		};
 
-		TupleSerializer<Tuple2<Long,Integer>> serializer = new TupleSerializer<Tuple2<Long, Integer>>(
-			(Class<Tuple2<Long, Integer>>) (Class<?>) Tuple2.class,
+		TupleSerializer<Tuple2<Integer,Integer>> serializer = new TupleSerializer<Tuple2<Integer, Integer>>(
+			(Class<Tuple2<Integer, Integer>>) (Class<?>) Tuple2.class,
 			insideSerializers
 		);
 
@@ -45,15 +46,15 @@ public class SorterFactory {
 		if( sorterName.equals("org.evaluation.sorter.individual.optimization.UseLittleEndian")
 				|| ( sorterName.equals("org.evaluation.sorter.OptimizedSorter") && ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN ) ) {
 			typeComp = new TypeComparator[] {
-				new LongComparatorLittleEndian(true)
+				new IntComparator(true)
 			};
 		} else {
 			typeComp = new TypeComparator[] {
-				new LongComparator(true)
+				new IntComparator(true)
 			};
 		}
 
-		TupleComparator<Tuple2<Long,Integer>> comparator = new TupleComparator<Tuple2<Long, Integer>>(
+		TupleComparator<Tuple2<Integer,Integer>> comparator = new TupleComparator<Tuple2<Integer, Integer>>(
 			new int[]{0}, typeComp, insideSerializers
 		);
 

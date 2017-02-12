@@ -47,19 +47,13 @@ public class Benchmarker {
 	public static class ThreadState {
 		@Param({
 			"org.apache.flink.runtime.operators.sort.NormalizedKeySorter",
-			"org.evaluation.sorter.individual.optimization.CompareUnrollLoop",
-			"org.evaluation.sorter.individual.optimization.SwapViaPutGetLong",
-			"org.evaluation.sorter.individual.optimization.FindSegmentIndexViaBitwiseOperators",
-			"org.evaluation.sorter.individual.optimization.EmbedQuickSortInside",
-			"org.evaluation.sorter.individual.optimization.UseLittleEndian",
-			"org.evaluation.sorter.individual.optimization.RemoveUnnecessaryBranching",
-			"org.evaluation.sorter.OptimizedSorter",
-			"org.evaluation.sorter.individual.optimization.DividedByConstant"
+			"org.evaluation.sorter.individual.optimization.DividedByConstant",
+			"org.flink3722.NormalizedKeySorter"
 		})
 
 		public String sorterClass;
 
-		@Param({"10000", "100000", "1000000"})
+		@Param({"1000000"})
 		public long noRecords;
 
 		volatile InMemorySorter sorter;
@@ -70,7 +64,10 @@ public class Benchmarker {
 			sorter = SorterFactory.getSorter(sorterClass);
 			if( sorter.equals("org.example.sorter.individual.optimization.EmbedQuickSortInside") ) {
 				quickSort = (IndexedSorter)sorter;
-			} else {
+			} if( sorter.equals("org.flink3722.NormalizedKeySorter") ) {
+				quickSort = new org.flink3722.QuickSort();
+			}
+			else {
 				quickSort = new QuickSort();
 
 			}
@@ -80,7 +77,7 @@ public class Benchmarker {
 			RandomTuple2LongInt generator = new RandomTuple2LongInt(Configuration.SEED);
 
 			int num = -1;
-			Tuple2<Long,Integer> record = new Tuple2<Long,Integer>();
+			Tuple2<Integer,Integer> record = new Tuple2<Integer, Integer>();
 
 			while (num < noRecords){
 				generator.next(record);

@@ -8,7 +8,7 @@ import java.util.Random;
 /**
  * Created by heytitle on 11/28/16.
  */
-public class RandomTuple2LongInt implements MutableObjectIterator<Tuple2<Long,Integer>> {
+public class RandomTuple2LongInt implements MutableObjectIterator<Tuple2<Integer,Integer>> {
 
 	private final long seed;
 
@@ -30,9 +30,9 @@ public class RandomTuple2LongInt implements MutableObjectIterator<Tuple2<Long,In
 	}
 
 	@Override
-	public Tuple2<Long,Integer> next(Tuple2<Long,Integer> reuse) {
+	public Tuple2<Integer,Integer> next(Tuple2<Integer,Integer> reuse) {
 		if (this.count++ < this.numRecords) {
-			reuse.setField(this.rnd.nextLong(), 0);
+			reuse.setField(this.rnd.nextInt(), 0);
 			reuse.setField(this.rnd.nextInt(), 1);
 			return reuse;
 		} else {
@@ -41,9 +41,9 @@ public class RandomTuple2LongInt implements MutableObjectIterator<Tuple2<Long,In
 	}
 
 	@Override
-	public Tuple2<Long,Integer> next() {
+	public Tuple2<Integer,Integer> next() {
 		if (this.count++ < this.numRecords) {
-			return new Tuple2(this.rnd.nextLong(), this.rnd.nextInt());
+			return new Tuple2(this.rnd.nextInt(), this.rnd.nextInt());
 		} else {
 			return null;
 		}
