@@ -57,7 +57,6 @@ public class Benchmarker {
 			"org.evaluation.sorter.individual.optimization.DividedByConstant",
 			"org.flink3722.NormalizedKeySorter"
 		})
-
 		public String sorterClass;
 
 		@Param({"10000", "100000", "1000000"})
@@ -72,10 +71,10 @@ public class Benchmarker {
 			if( sorterClass.equals("org.example.sorter.individual.optimization.EmbedQuickSortInside") ) {
 				quickSort = (IndexedSorter)sorter;
 			} else if( sorterClass.equals("org.flink3722.NormalizedKeySorter") ) {
+				System.out.println("FLINK-3722: QuickSort");
 				quickSort = new org.flink3722.QuickSort();
 			} else {
 				quickSort = new QuickSort();
-
 			}
 
 			long start_time = System.nanoTime();
