@@ -62,14 +62,12 @@ public class Benchmarker {
 		@Setup(Level.Invocation)
 		public void writeRandomData() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 			sorter = SorterFactory.getSorter(sorterClass);
-			if( sorter.equals("org.example.sorter.individual.optimization.EmbedQuickSortInside") ) {
+			if( sorterClass.equals("org.example.sorter.individual.optimization.EmbedQuickSortInside") ) {
 				quickSort = (IndexedSorter)sorter;
-			} if( sorter.equals("org.flink3722.NormalizedKeySorter") ) {
+			} else if( sorterClass.equals("org.flink3722.NormalizedKeySorter") ) {
 				quickSort = new org.flink3722.QuickSort();
-			}
-			else {
+			} else {
 				quickSort = new QuickSort();
-
 			}
 
 			long start_time = System.nanoTime();
